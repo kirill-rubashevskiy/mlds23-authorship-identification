@@ -167,6 +167,8 @@ def preprocess_text4(text):
               and token.strip() not in punctuation \
               and token.isdigit()==False]
 #      tokens = " ".join(tokens) #чтобы сделать не список, а строку
-    return tokensgit commit -am "Added beautiful fixes"
+    return tokens
+
+
 
 
