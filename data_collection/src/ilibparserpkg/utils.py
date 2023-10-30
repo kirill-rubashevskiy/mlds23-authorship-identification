@@ -47,7 +47,7 @@ class IlibParser:
         if new_search:
             self.found_df = pd.DataFrame(columns=['title', 'author', 'author_id', 'file_name', 'text_url'])
         else:
-            self.found_df = pd.read_csv('./found/found_df.csv', index_col=0)
+            self.found_df = pd.read_csv('./parsed_data/found_df.csv', index_col=0)
 
     def _grab_page(self) -> str:
 
@@ -61,7 +61,7 @@ class IlibParser:
         text_url = self.driver.current_url
         author = self.driver.find_element(By.CLASS_NAME, 'author').text
         if author in self.found_df.author.unique():
-            author_id = self.found_df[self.found_df.author == author].author_id[0]
+            author_id = self.found_df[self.found_df.author == author].values[0,2]
         else:
             author_id = self.found_df.author.nunique()
 
@@ -121,3 +121,6 @@ class IlibParser:
         text_props = text_row + [text]
 
         return TextObject(*text_props)
+
+    def end_search(self):
+        self.driver.close()
