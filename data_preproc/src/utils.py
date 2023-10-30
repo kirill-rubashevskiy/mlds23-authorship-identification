@@ -149,24 +149,6 @@ def preprocess_text3(text):
 #      tokens = " ".join(tokens) #чтобы сделать не список, а строку
     return tokens
 
-#удаляем цифры, http, приводим к нижнему регистру, убираем пробелы, пунктуацию ОСТАВЛЯЕМ короткие слова и стопслова
-def preprocess_text4(text):
-    text = remove_numbers(text)
-    text = remove_http(text)
-    text = convert_to_lower(text)
-    text = remove_white_space(text)
-    # text = remove_short_words(text) #это убирает не/ни кстати
-    text = remove_punctuation(text) #cлепливает слова, там где знаки препинания без пробела
 
-    text = str(text)
-    tokens = mystem.lemmatize(text.lower())
-    tokens = [token for token in tokens if #token not in russian_stopwords\
-               # and
-              token != " " \
-              # and len(token)>=3 \
-              and token.strip() not in punctuation \
-              and token.isdigit()==False]
-#      tokens = " ".join(tokens) #чтобы сделать не список, а строку
-    return tokensgit commit -am "Added beautiful fixes"
 
 
