@@ -50,6 +50,12 @@ class IlibParser:
             self.found_df = pd.read_csv('./parsed_data/found_df.csv', index_col=0)
 
     def _grab_page(self) -> str:
+        """
+        Function grabs text on a webpage
+
+        Returns:
+            str: text
+        """
 
         src = self.driver.page_source
         page_soup = BeautifulSoup(src, 'html.parser', parse_only=SoupStrainer("span", {"class": "p"}))
@@ -57,11 +63,33 @@ class IlibParser:
         return page_soup.text
 
     def _grab_text(self, title: str) -> tuple[list[Union[str, Any]], str]:
+        """
+        Function:
+
+        - grabs text posted on a single page or multiple pages
+        - grabs text metadata (author, text url)
+        - generates file name to store text
+        - assigns to new author a unique id
+        - places author id at the beginning of the text
+
+        Args:
+            title (str): text title
+
+        Returns:
+            (tuple):
+                text metadata (list):
+                    - title (str)
+                    - author (str)
+                    - author id (int)
+                    - file name (str)
+                    - text url (str)
+                text (str)
+        """
 
         text_url = self.driver.current_url
         author = self.driver.find_element(By.CLASS_NAME, 'author').text
         if author in self.found_df.author.unique():
-            author_id = self.found_df[self.found_df.author == author].values[0,2]
+            author_id = self.found_df[self.found_df.author == author].values[0, 2]
         else:
             author_id = self.found_df.author.nunique()
 
@@ -90,6 +118,27 @@ class IlibParser:
 
     def search_title(self,
                      title: str) -> Optional[TextObject]:
+        """
+        Function:
+
+        - searches for text title in ilibrary.ru
+        - if title is found:
+            - parses text and saves its metadata in found_df attribute (pd.DataFrame)
+        - if not:
+            - adds title to its not_found attribute (list)
+
+        Args:
+            title (str): text title
+
+        Returns:
+            TextObject: custom class object, which attributes include:
+                - text title (str)
+                - author (str)
+                - author id (int)
+                - text file name (str)
+                - text url (str)
+                - text (str)
+        """
 
         if title in self.searched:
             return
@@ -100,7 +149,6 @@ class IlibParser:
 
             return
 
-        # search for title
         self.searched.append(title)
         self.driver.get(self.search_url)
         search_box = self.driver.find_element(By.NAME, "q")
@@ -123,4 +171,8 @@ class IlibParser:
         return TextObject(*text_props)
 
     def end_search(self):
+        """
+        Function closes webdriver
+        """
+
         self.driver.close()
