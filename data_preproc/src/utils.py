@@ -8,8 +8,10 @@ russian_stopwords_new = stopwords.words("russian")
 russian_stopwords_new.extend(my_stopwords)
 not_stopwords = {'не', 'ни'}
 russian_stopwords = [word for word in russian_stopwords_new if word not in not_stopwords]
+from nltk.tokenize import word_tokenize
 from pymystem3 import Mystem
 from string import punctuation
+import re
 
 def text_splitter(text):
     # Исходная строка - отделяем 12 символов - это id автора, остальное - сам текст произведения
@@ -102,14 +104,15 @@ def preprocess_text1(text):
     text = remove_punctuation(text) #cлепливает слова, там где знаки препинания без пробела
 
     text = str(text)
-    tokens = mystem.lemmatize(text.lower())
-    tokens = [token for token in tokens if token not in russian_stopwords\
-              and token != " " \
-              and len(token)>=3 \
-              and token.strip() not in punctuation \
-              and token.isdigit()==False]
+    # лемматизацию убираем
+    # tokens = mystem.lemmatize(text.lower())
+    # tokens = [token for token in tokens if token not in russian_stopwords\
+    #           and token != " " \
+    #           and len(token)>=3 \
+    #           and token.strip() not in punctuation \
+    #           and token.isdigit()==False]
 #      tokens = " ".join(tokens) #чтобы сделать не список, а строку
-    return tokens
+    return text
 
 #удаляем цифры, http, приводим к нижнему регистру, убираем пробелы, короткие слова. ОСТАВЛЯЕМ пунктуацию
 def preprocess_text2(text):
@@ -121,14 +124,15 @@ def preprocess_text2(text):
     # text = remove_punctuation(text) #cлепливает слова, там где знаки препинания без пробела
 
     text = str(text)
-    tokens = mystem.lemmatize(text.lower())
-    tokens = [token for token in tokens if token not in russian_stopwords\
-              and token != " " \
-              and len(token)>=3 \
-              # and token.strip() not in punctuation \
-              and token.isdigit()==False]
-#      tokens = " ".join(tokens) #чтобы сделать не список, а строку
-    return tokens
+    # лемматизацию убираем
+#     tokens = mystem.lemmatize(text.lower())
+#     tokens = [token for token in tokens if token not in russian_stopwords\
+#               and token != " " \
+#               and len(token)>=3 \
+#               # and token.strip() not in punctuation \
+#               and token.isdigit()==False]
+# #      tokens = " ".join(tokens) #чтобы сделать не список, а строку
+    return text
 
 #удаляем цифры, http, приводим к нижнему регистру, убираем пробелы, пунктуацию ОСТАВЛЯЕМ короткие слова.
 def preprocess_text3(text):
@@ -140,14 +144,15 @@ def preprocess_text3(text):
     text = remove_punctuation(text) #cлепливает слова, там где знаки препинания без пробела
 
     text = str(text)
-    tokens = mystem.lemmatize(text.lower())
-    tokens = [token for token in tokens if token not in russian_stopwords\
-              and token != " " \
-              # and len(token)>=3 \
-              and token.strip() not in punctuation \
-              and token.isdigit()==False]
+    # лемматизацию убираем
+    # tokens = mystem.lemmatize(text.lower())
+    # tokens = [token for token in tokens if token not in russian_stopwords\
+    #           and token != " " \
+    #           # and len(token)>=3 \
+    #           and token.strip() not in punctuation \
+    #           and token.isdigit()==False]
 #      tokens = " ".join(tokens) #чтобы сделать не список, а строку
-    return tokens
+    return text
 
 #удаляем цифры, http, приводим к нижнему регистру, убираем пробелы, пунктуацию ОСТАВЛЯЕМ короткие слова и стопслова
 def preprocess_text4(text):
@@ -159,15 +164,22 @@ def preprocess_text4(text):
     text = remove_punctuation(text) #cлепливает слова, там где знаки препинания без пробела
 
     text = str(text)
-    tokens = mystem.lemmatize(text.lower())
-    tokens = [token for token in tokens if #token not in russian_stopwords\
-               # and
-              token != " " \
-              # and len(token)>=3 \
-              and token.strip() not in punctuation \
-              and token.isdigit()==False]
+    # лемматизацию убираем
+    # tokens = mystem.lemmatize(text.lower())
+    # tokens = [token for token in tokens if #token not in russian_stopwords\
+    #            # and
+    #           token != " " \
+    #           # and len(token)>=3 \
+    #           and token.strip() not in punctuation \
+    #           and token.isdigit()==False]
 #      tokens = " ".join(tokens) #чтобы сделать не список, а строку
-    return tokens
+    return text
+
+def tokenizing(text):
+    tokens = word_tokenize(text)
+  ## Remove Stopwords from tokens
+    result = [i for i in tokens if not i in russian_stopwords]
+    return result
 
 
 
