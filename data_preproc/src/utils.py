@@ -12,6 +12,7 @@ from nltk.tokenize import word_tokenize
 from pymystem3 import Mystem
 from string import punctuation
 import re
+from nltk.tokenize import RegexpTokenizer
 
 def text_splitter(text):
     # Исходная строка - отделяем 12 символов - это id автора, остальное - сам текст произведения
@@ -93,6 +94,7 @@ def remove_white_space(text):
     return text
 
 mystem = Mystem()
+tokenizer = RegexpTokenizer(r'\w+')
 
 #удаляем цифры, http, приводим к нижнему регистру, убираем пробелы, короткие слова и пунктуацию
 def preprocess_text1(text):
@@ -173,6 +175,18 @@ def preprocess_text4(text):
     #           and token.strip() not in punctuation \
     #           and token.isdigit()==False]
 #      tokens = " ".join(tokens) #чтобы сделать не список, а строку
+    return text
+
+
+#удаляем цифры, http, приводим к нижнему регистру, убираем пробелы и пунктуацию
+def preprocess_text5(text: str) -> str:
+
+    text = remove_http(text)
+    text = convert_to_lower(text)
+
+    text = ' '.join(tokenizer.tokenize(text)) # remove numbers and puctuation
+
+    text = text.replace('\n', '').replace('\r', '')
     return text
 
 def tokenizing(text):
