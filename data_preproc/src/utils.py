@@ -97,7 +97,7 @@ mystem = Mystem()
 tokenizer = RegexpTokenizer(r'\w+')
 
 #удаляем цифры, http, приводим к нижнему регистру, убираем пробелы, короткие слова и пунктуацию
-def preprocess_text1(text):
+def preprocess_text1(text, tokenize = True, tostr=False):
     text = remove_numbers(text)
     text = remove_http(text)
     text = convert_to_lower(text)
@@ -106,76 +106,80 @@ def preprocess_text1(text):
     text = remove_punctuation(text) #cлепливает слова, там где знаки препинания без пробела
 
     text = str(text)
-    # лемматизацию убираем
-    # tokens = mystem.lemmatize(text.lower())
-    # tokens = [token for token in tokens if token not in russian_stopwords\
-    #           and token != " " \
-    #           and len(token)>=3 \
-    #           and token.strip() not in punctuation \
-    #           and token.isdigit()==False]
-#      tokens = " ".join(tokens) #чтобы сделать не список, а строку
-    return text
+    if tokenize:
+        tokens = mystem.lemmatize(text.lower())
+        tokens = [token for token in tokens if token not in russian_stopwords\
+                  and token != " " \
+                  and len(token)>=3 \
+                  and token.strip() not in punctuation \
+                  and token.isdigit()==False]
+    if tostr:
+         tokens = " ".join(tokens) #чтобы сделать не список, а строку
+    return tokens
 
 #удаляем цифры, http, приводим к нижнему регистру, убираем пробелы, короткие слова. ОСТАВЛЯЕМ пунктуацию
-def preprocess_text2(text):
+def preprocess_text2(text, tokenize = True, tostr=False):
     text = remove_numbers(text)
     text = remove_http(text)
     text = convert_to_lower(text)
     text = remove_white_space(text)
     text = remove_short_words(text) #это убирает не/ни кстати
-    # text = remove_punctuation(text) #cлепливает слова, там где знаки препинания без пробела
+    # text = remove_punctuation(text) #cлепляет слова, там где знаки препинания без пробела
 
     text = str(text)
-    # лемматизацию убираем
-#     tokens = mystem.lemmatize(text.lower())
-#     tokens = [token for token in tokens if token not in russian_stopwords\
-#               and token != " " \
-#               and len(token)>=3 \
-#               # and token.strip() not in punctuation \
-#               and token.isdigit()==False]
-# #      tokens = " ".join(tokens) #чтобы сделать не список, а строку
-    return text
+    if tokenize:
+        tokens = mystem.lemmatize(text.lower())
+        tokens = [token for token in tokens if token not in russian_stopwords\
+                  and token != " " \
+                  and len(token)>=3 \
+                  # and token.strip() not in punctuation \
+                  and token.isdigit()==False]
+    if tostr:
+        tokens = " ".join(tokens) #чтобы сделать не список, а строку
+    return tokens
 
 #удаляем цифры, http, приводим к нижнему регистру, убираем пробелы, пунктуацию ОСТАВЛЯЕМ короткие слова.
-def preprocess_text3(text):
+def preprocess_text3(text, tokenize = True, tostr=False):
     text = remove_numbers(text)
     text = remove_http(text)
     text = convert_to_lower(text)
     text = remove_white_space(text)
     # text = remove_short_words(text) #это убирает не/ни кстати
-    text = remove_punctuation(text) #cлепливает слова, там где знаки препинания без пробела
+    text = remove_punctuation(text) #cлепляет слова, там где знаки препинания без пробела
 
     text = str(text)
-    # лемматизацию убираем
-    # tokens = mystem.lemmatize(text.lower())
-    # tokens = [token for token in tokens if token not in russian_stopwords\
-    #           and token != " " \
-    #           # and len(token)>=3 \
-    #           and token.strip() not in punctuation \
-    #           and token.isdigit()==False]
-#      tokens = " ".join(tokens) #чтобы сделать не список, а строку
-    return text
+    if tokenize:
+        tokens = mystem.lemmatize(text.lower())
+        tokens = [token for token in tokens if token not in russian_stopwords\
+                  and token != " " \
+                  # and len(token)>=3 \
+                  and token.strip() not in punctuation \
+                  and token.isdigit()==False]
+    if tostr:
+        tokens = " ".join(tokens) #чтобы сделать не список, а строку
+    return tokens
 
 #удаляем цифры, http, приводим к нижнему регистру, убираем пробелы, пунктуацию ОСТАВЛЯЕМ короткие слова и стопслова
-def preprocess_text4(text):
+def preprocess_text4(text, tokenize = True, tostr=False):
     text = remove_numbers(text)
     text = remove_http(text)
     text = convert_to_lower(text)
     text = remove_white_space(text)
     # text = remove_short_words(text) #это убирает не/ни кстати
-    text = remove_punctuation(text) #cлепливает слова, там где знаки препинания без пробела
+    text = remove_punctuation(text) #cлепляет слова, там где знаки препинания без пробела
 
     text = str(text)
-    # лемматизацию убираем
-    # tokens = mystem.lemmatize(text.lower())
-    # tokens = [token for token in tokens if #token not in russian_stopwords\
-    #            # and
-    #           token != " " \
-    #           # and len(token)>=3 \
-    #           and token.strip() not in punctuation \
-    #           and token.isdigit()==False]
-#      tokens = " ".join(tokens) #чтобы сделать не список, а строку
-    return text
+    if tokenize:
+        tokens = mystem.lemmatize(text.lower())
+        tokens = [token for token in tokens if #token not in russian_stopwords\
+                   # and
+                  token != " " \
+                  # and len(token)>=3 \
+                  and token.strip() not in punctuation \
+                  and token.isdigit()==False]
+    if tostr:
+        tokens = " ".join(tokens) #чтобы сделать не список, а строку
+    return tokens
 
 
 #удаляем цифры, http, приводим к нижнему регистру, убираем пробелы и пунктуацию
@@ -184,7 +188,7 @@ def preprocess_text5(text: str) -> str:
     text = remove_http(text)
     text = convert_to_lower(text)
 
-    text = ' '.join(tokenizer.tokenize(text)) # remove numbers and puctuation
+    text = ' '.join(tokenizer.tokenize(text)) # убирает цифры и пунктуацию
 
     text = text.replace('\n', '').replace('\r', '')
     return text
