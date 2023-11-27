@@ -94,7 +94,7 @@ def remove_white_space(text):
     return text
 
 mystem = Mystem()
-tokenizer = RegexpTokenizer(r'\w+')
+tokenizer = RegexpTokenizer(r'[A-Za-zА-яЁё]+')
 
 #удаляем цифры, http, приводим к нижнему регистру, убираем пробелы, короткие слова и пунктуацию
 def preprocess_text1(text, tokenize = True, tostr=False):
@@ -182,8 +182,8 @@ def preprocess_text4(text, tokenize = True, tostr=False):
     return tokens
 
 
-#удаляем цифры, http, приводим к нижнему регистру, убираем пробелы и пунктуацию
-def preprocess_text5(text: str) -> str:
+#удаляем цифры, http, приводим к нижнему регистру, убираем пробелы и пунктуациюб при необходимости лемматризируем
+def preprocess_text5(text: str, lemmatize: bool = False) -> str:
 
     text = remove_http(text)
     text = convert_to_lower(text)
@@ -191,6 +191,10 @@ def preprocess_text5(text: str) -> str:
     text = ' '.join(tokenizer.tokenize(text)) # убирает цифры и пунктуацию
 
     text = text.replace('\n', '').replace('\r', '')
+
+    if lemmatize:
+        text = ' '.join(mystem.lemmatize(text))
+
     return text
 
 def tokenizing(text):
