@@ -18,7 +18,7 @@ from models import load_model
 from utils import label2name, preprocess_text5
 
 TOKEN = os.getenv('TOKEN')
-WEBHOOK_HOST = "https://applied-python-aiogram-bot.onrender.com"
+WEBHOOK_HOST = "https://mlds23-authorship-identification.onrender.com"
 WEBHOOK_PATH = f'/webhook/{TOKEN}'
 WEBHOOK_URL = f'{WEBHOOK_HOST}{WEBHOOK_PATH}'
 WEB_SERVER_HOST = '0.0.0.0'
