@@ -183,7 +183,7 @@ def preprocess_text4(text, tokenize = True, tostr=False):
 
 
 #удаляем цифры, http, приводим к нижнему регистру, убираем пробелы и пунктуациюб при необходимости лемматризируем
-def preprocess_text5(text: str, lemmatize: bool = False) -> str:
+def preprocess_text5(text: str, remove_stopwords: bool = False, lemmatize: bool = False) -> str:
 
     text = remove_http(text)
     text = convert_to_lower(text)
@@ -191,6 +191,9 @@ def preprocess_text5(text: str, lemmatize: bool = False) -> str:
     text = ' '.join(tokenizer.tokenize(text)) # убирает цифры и пунктуацию
 
     text = text.replace('\n', '').replace('\r', '')
+
+    if remove_stopwords:
+        text = ' '.join([token for token in word_tokenize(text) if token not in russian_stopwords])
 
     if lemmatize:
         text = ' '.join(mystem.lemmatize(text))

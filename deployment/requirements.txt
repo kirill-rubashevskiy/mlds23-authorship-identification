@@ -1,5 +1,5 @@
+aiogram<4.0
 fastapi
-aiogram==2.25.2
 gunicorn
 uvicorn
 boto3
@@ -7,3 +7,4 @@ pymystem3
 nltk
 numpy
 scikit-learn
+pandas
