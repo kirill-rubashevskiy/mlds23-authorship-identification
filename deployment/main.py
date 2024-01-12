@@ -15,7 +15,7 @@ import os
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 from models import load_model
-from utils import label2name, preprocess_text5
+from utils import confident_predict, label2name, preprocess_text5
 
 TOKEN = os.getenv('TOKEN')
 WEBHOOK_HOST = "https://mlds23-authorship-identification.onrender.com"
@@ -115,6 +115,7 @@ async def predict_item(message: types.Message,
                        postprocessing: dict,
                        stats: dict):
     user_request = message.text[len('/predict_item'):]
+    logging.info(user_request)
     user_id = message.from_user.id
     user_full_name = message.from_user.full_name
     logging.info(f'Main: {user_id} {user_full_name} {time.asctime()}. Message: {message}')
@@ -122,14 +123,19 @@ async def predict_item(message: types.Message,
     user_request_preprocessed = preprocessing(user_request)
     logging.info('Данные предобработаны')
 
-    pred = model.predict(np.array([user_request_preprocessed]))[0]
+    proba = model.predict_proba(np.array([user_request_preprocessed]))
     logging.info('Модель сделала предсказание')
+
+    label = confident_predict(proba)
+    if label != -1:
+        reply = f'Кажется, этот фрагмент написал {postprocessing[label]}'
+    else:
+        reply = f'Я не могу уверенно определить автора данного фрагмента'
+    logging.info('Предсказания прошли постпроцессинг')
 
     stats["requests"][0] += 1
 
-    await message.reply(
-        f'Кажется, этот фрагмент написал {postprocessing[pred]}'
-    )
+    await message.reply(reply)
 
 
 @dp.message(Command("predict_items"))
@@ -138,6 +144,7 @@ async def predict_items(message: types.Message,
                         model: Pipeline,
                         postprocessing: dict,
                         stats: dict):
+
     document = message.document
     buffer = await bot.download(document)
     df = pd.read_csv(buffer)
@@ -146,10 +153,11 @@ async def predict_items(message: types.Message,
     df_preprocessed = df['text'].apply(preprocessing)
     logging.info('Данные предобработаны')
 
-    predictions = model.predict(df_preprocessed)
+    proba = model.predict_proba(df_preprocessed)
     logging.info('Модель вернула предсказания')
 
-    predictions_postprocessed = pd.Series(predictions, name='predictions').apply(lambda x: postprocessing[x])
+    labels = np.apply_along_axis(confident_predict, 1, proba)
+    predictions_postprocessed = pd.Series(labels, name='predictions').apply(lambda x: postprocessing[x])
     logging.info('Предсказания прошли постпроцессинг')
 
     buffer = io.BytesIO()
