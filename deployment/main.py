@@ -12,10 +12,10 @@ from aiogram.types import BufferedInputFile
 from aiohttp import web
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 import os
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 from models import load_model
-from utils import label2name, preprocess_text5
+from utils import confident_predict, label2name, preprocess_text5
 
 TOKEN = os.getenv('TOKEN')
 WEBHOOK_HOST = "https://mlds23-authorship-identification.onrender.com"
@@ -59,10 +59,12 @@ async def cmd_help(message: types.Message):
     content = """
     Бот поддерживает следующие режимы/команды:
     - /help — получить подсказки по работе бота
+    - /predict_item — отправить фрагмент текста и получить предсказание об авторе фрагмента
+    - /predict_items — отправить csv-файл, в котором есть столбец "text" c фрагментами текстов, и получить csv-файл с предсказаниями по каждому фрагменту
     - /rate — оценить работу бота
     - /start — запустить бота
     - /stats — получить статистику работы бота
-    - отправить фрагмент текста — получить предсказание об авторе фрагмента
+    
     - отправить csv-файл, в котором есть столбец "text" c фрагментами текстов — получить csv-файл с предсказаниями по каждому фрагменту
     """
 
@@ -71,29 +73,25 @@ async def cmd_help(message: types.Message):
 
 @dp.message(Command("rate"))
 async def cmd_rate(message: types.Message):
-    builder = InlineKeyboardBuilder()
+    builder = ReplyKeyboardBuilder()
     for i in range(1, 6):
         builder.add(
-            types.InlineKeyboardButton(
+            types.KeyboardButton(
                 text=str(i),
-                callback_data=f'num_{str(i)}')
+                callback_data=f'num_{str(i)}'
+            )
         )
 
     await message.answer(
         "Оцените работу бота:",
-        reply_markup=builder.as_markup(),
+        reply_markup=builder.as_markup(resize_keyboard=True),
     )
 
-
-@dp.callback_query(F.data.startswith('num_'))
-async def callbacks_num(callback: types.CallbackQuery, stats: dict):
-    action = int(callback.data.split("_")[1])
-    stats['rate_sum'][0] += action
+@dp.message(F.text.in_({str(i) for i in range(1, 6)}))
+async def rate_callback(message: types.Message, stats: dict):
+    stats['rate_sum'][0] += int(message.text)
     stats['rate_num'][0] += 1
-
-    await callback.answer(
-        text="Спасибо, что оценили работу бота!",
-    )
+    await message.reply("Cпасибо, что оценили работу бота!")
 
 
 @dp.message(Command("stats"))
@@ -110,13 +108,14 @@ async def cmd_stats(message: types.Message, stats: dict):
     await message.reply(content)
 
 
-@dp.message(F.text)
+@dp.message(Command("predict_item"))
 async def predict_item(message: types.Message,
                        preprocessing: Callable,
                        model: Pipeline,
                        postprocessing: dict,
                        stats: dict):
-    user_request = message.text
+    user_request = message.text[len('/predict_item'):]
+    logging.info(user_request)
     user_id = message.from_user.id
     user_full_name = message.from_user.full_name
     logging.info(f'Main: {user_id} {user_full_name} {time.asctime()}. Message: {message}')
@@ -124,22 +123,28 @@ async def predict_item(message: types.Message,
     user_request_preprocessed = preprocessing(user_request)
     logging.info('Данные предобработаны')
 
-    pred = model.predict(np.array([user_request_preprocessed]))[0]
+    proba = model.predict_proba(np.array([user_request_preprocessed]))
     logging.info('Модель сделала предсказание')
+
+    label = confident_predict(proba)
+    if label != -1:
+        reply = f'Кажется, этот фрагмент написал {postprocessing[label]}'
+    else:
+        reply = f'Я не могу уверенно определить автора данного фрагмента'
+    logging.info('Предсказания прошли постпроцессинг')
 
     stats["requests"][0] += 1
 
-    await message.reply(
-        f'Кажется, этот фрагмент написал {postprocessing[pred]}'
-    )
+    await message.reply(reply)
 
 
-@dp.message(F.document)
+@dp.message(Command("predict_items"))
 async def predict_items(message: types.Message,
                         preprocessing: Callable,
                         model: Pipeline,
                         postprocessing: dict,
                         stats: dict):
+
     document = message.document
     buffer = await bot.download(document)
     df = pd.read_csv(buffer)
@@ -148,10 +153,11 @@ async def predict_items(message: types.Message,
     df_preprocessed = df['text'].apply(preprocessing)
     logging.info('Данные предобработаны')
 
-    predictions = model.predict(df_preprocessed)
+    proba = model.predict_proba(df_preprocessed)
     logging.info('Модель вернула предсказания')
 
-    predictions_postprocessed = pd.Series(predictions, name='predictions').apply(lambda x: postprocessing[x])
+    labels = np.apply_along_axis(confident_predict, 1, proba)
+    predictions_postprocessed = pd.Series(labels, name='predictions').apply(lambda x: postprocessing[x])
     logging.info('Предсказания прошли постпроцессинг')
 
     buffer = io.BytesIO()

@@ -1,4 +1,6 @@
 import re
+
+import numpy as np
 from pymystem3 import Mystem
 from nltk.tokenize import RegexpTokenizer
 
@@ -30,7 +32,14 @@ def preprocess_text5(text: str, lemmatize: bool = False) -> str:
     return text
 
 
+def confident_predict(proba: np.ndarray, threshold: float = 0.4) -> int:
+    if np.max(proba) >= threshold:
+        return np.argmax(proba)
+    return -1
+
+
 label2name = {
+    -1: 'не знаю',
     0: 'А. Пушкин',
     1: 'Д. Мамин-Сибиряк',
     2: 'И. Тургенев',
