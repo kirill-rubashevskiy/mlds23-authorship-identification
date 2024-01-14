@@ -8,13 +8,14 @@ import os
 from dotenv import load_dotenv
 import boto3
 from io import BytesIO
+
 BUCKET_NAME = "mlds23-authorship-identification"
-MODELS_DIR = 'models/'
+MODELS_DIR = "models/"
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 
 
 bot = Bot(token=TOKEN)
@@ -27,21 +28,21 @@ logging.basicConfig(level=logging.INFO)
 # llm = Llama(model_path=model_path, n_ctx=8192, n_threads=8, n_gpu_layers=0)
 
 # Выгрузка модели из s3
-model_file_name = 'openchat_3.5.Q4_K_M.gguf'
+model_file_name = "openchat_3.5.Q4_K_M.gguf"
 
-local_model_path = f'/Users/dariamishina/Downloads/{model_file_name}'
+local_model_path = f"/Users/dariamishina/Downloads/{model_file_name}"
 
 session = boto3.session.Session()
 s3 = session.client(
-    service_name='s3',
-    endpoint_url='https://storage.yandexcloud.net',
+    service_name="s3",
+    endpoint_url="https://storage.yandexcloud.net",
     aws_access_key_id=AWS_ACCESS_KEY_ID,
     aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-    region_name='ru-central1'
+    region_name="ru-central1",
 )
-logging.info('Инициализация клиента S3')
+logging.info("Инициализация клиента S3")
 
-s3_key = f'{MODELS_DIR}{model_file_name}'
+s3_key = f"{MODELS_DIR}{model_file_name}"
 
 
 with BytesIO() as model_buffer:
@@ -49,25 +50,19 @@ with BytesIO() as model_buffer:
     model_buffer.seek(0)
 
     # Сохранение модели локально - пока не придумала как без этого
-    with open(local_model_path, 'wb') as local_model_file:
+    with open(local_model_path, "wb") as local_model_file:
         local_model_file.write(model_buffer.read())
-logging.info(f'Модель успешно загружена из S3')
+logging.info(f"Модель успешно загружена из S3")
 
 # собственно сама модель
-llm = Llama(
-    model_path=local_model_path,
-    n_ctx=8192,
-    n_threads=8,
-    n_gpu_layers=0
-)
-logging.info(f'Модель инициализирована')
+llm = Llama(model_path=local_model_path, n_ctx=8192, n_threads=8, n_gpu_layers=0)
+logging.info(f"Модель инициализирована")
 
 # Переменные для статистики
 ratings = []
 usage_stats = {"total_requests": 0, "average_rating": 0}
 
 
-# Обработчик команды /start
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     await message.answer(
@@ -75,60 +70,51 @@ async def cmd_start(message: types.Message):
     )
 
 
-# Обработчик текстовых сообщений
 @dp.message(F.text, Command("test"))
 async def generate_response(message: types.Message):
     global usage_stats
     usage_stats["total_requests"] += 1
 
-    # Получение текста после команды /test
     command_text = message.text[len("/test") :].strip()
-
-    # Проверка, что текст после команды существует
     if command_text:
+        logging.info(f"Текст от пользователя получен")
         # generated_text = command_text + ' NEW!!!' #заглушка для теста бота
-        # Генерация ответа с использованием модели
         input_text = command_text
         prompt = f"GPT4 Correct User: кто из русских классиков написал эти строки: {input_text}<|end_of_turn|>GPT4 Correct Assistant:"
         output = llm(prompt, max_tokens=512, stop=["</s>"], echo=True)
+        logging.info(f"ответ от llm готов")
         generated_text = output["choices"][0]["text"].split("GPT4 Correct Assistant: ")[
             1
         ]
-        # Отправка ответа
         await message.reply(generated_text)
+        logging.info(f"ответ отправлен")
         await message.answer(
             "С помощью команды /rate вы можете оценить качество ответа"
         )
     else:
-        # В случае отсутствия текста после команды /test
         await message.reply("Напишите ваш запрос после команды /test")
 
 
-# обработчик для команды /file
 @dp.message(Command("file"))
 async def process_file(message: types.Message):
-    # Проверяем, есть ли прикрепленный файл
     if message.document:
+        logging.info(f"Файл от пользователя получен")
         file_id = message.document.file_id
         file = await bot.get_file(file_id)
         file_path = file.file_path
-
-        # Читаем содержимое файла и используем его текст для генерации ответа
         file_data = await bot.download_file(file_path)
         file_content = file_data.read()
-
-        # Преобразуем байтовые данные в строку
+        logging.info(f"Файл прочитан")
         text_from_file = file_content.decode("utf-8").strip()
-
-        # Генерация ответа
+        logging.info(f"Преобразованы байтовые данные в строку")
         prompt = f"GPT4 Correct User: кто из русских классиков написал эти строки: {text_from_file}GPT4 Correct Assistant:"
         output = llm(prompt, max_tokens=512, stop=["</s>"], echo=True)
+        logging.info(f"ответ от llm готов")
         generated_text = output["choices"][0]["text"].split("GPT4 Correct Assistant: ")[
             1
         ]
-
-        # Отправка ответа
         await message.reply(generated_text)
+        logging.info(f"ответ отправлен")
         await message.answer(
             "С помощью команды /rate вы можете оценить качество ответа"
         )
@@ -138,7 +124,6 @@ async def process_file(message: types.Message):
         )
 
 
-# Обработчик команды /help
 @dp.message(Command("help"))
 async def cmd_help(message: types.Message):
     help_text = """
@@ -155,7 +140,6 @@ async def cmd_help(message: types.Message):
     await message.answer(help_text)
 
 
-# Обработчик команды /rate
 @dp.message(Command("rate"))
 async def cmd_rate(message: types.Message):
     buttons = [KeyboardButton(text=str(i)) for i in range(1, 6)]
@@ -163,14 +147,13 @@ async def cmd_rate(message: types.Message):
     await message.answer("Пожалуйста, оцените качество ответа:", reply_markup=keyboard)
 
 
-# Обработчик оценки от пользователя
 @dp.message(lambda message: message.text.isdigit() and 1 <= int(message.text) <= 5)
 async def process_rating(message: types.Message):
     global ratings, usage_stats
     rating = int(message.text)
     ratings.append(rating)
 
-    # Пересчет среднего рейтинга
+    logging.info(f"пересчет срднего рейтинга")
     total_ratings = sum(ratings)
     average_rating = total_ratings / len(ratings)
     usage_stats["average_rating"] = round(average_rating, 2)
@@ -180,7 +163,6 @@ async def process_rating(message: types.Message):
     )
 
 
-# Обработчик команды /stats
 @dp.message(Command("stats"))
 async def cmd_stats(message: types.Message):
     global usage_stats
