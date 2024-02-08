@@ -25,6 +25,7 @@ aiogram = "^3.3.0"
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.0.0"
 wandb = "^0.16.3"
+pre-commit = "^3.6.0"
 
 
 [tool.poetry.group.parser.dependencies]
@@ -38,6 +39,25 @@ matplotlib = "^3.8.2"
 seaborn = "^0.13.2"
 spacy = "^3.7.3"
 gensim = "^4.3.2"
+
+
+[tool.black]
+line-length = 90
+target-version = ["py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 90
+lines_after_imports = 2
+
+[tool.nbqa.config]
+black = "pyproject.toml"
+isort = "pyproject.toml"
+flake8 = ".flake8"
+
+[tool.nbqa.mutate]
+black = 1
+isort = 1
 
 [build-system]
 requires = ["poetry-core"]
