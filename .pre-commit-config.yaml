@@ -34,15 +34,15 @@ repos:
   - repo: https://github.com/nbQA-dev/nbQA
     rev: 1.7.1
     hooks:
-     - id: nbqa-black
-       additional_dependencies: [black==24.1.1]
-     - id: nbqa-isort
-       additional_dependencies: [isort==5.13.2]
-     - id: nbqa-flake8
-       additional_dependencies: [flake8==7.0.0]
+      - id: nbqa-black
+        additional_dependencies: [black==24.1.1]
+      - id: nbqa-isort
+        additional_dependencies: [isort==5.13.2]
+      - id: nbqa-flake8
+        additional_dependencies: [flake8==7.0.0]
 
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.2.5
+    rev: v3.1.0
     hooks:
       - id: prettier
         types_or: [markdown, yaml, toml, json, dockerfile, shell]
