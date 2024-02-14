@@ -24,39 +24,39 @@ dp = Dispatcher()
 logging.basicConfig(level=logging.INFO)
 
 # Инициализация модели от LlamaCpp - если загружаем с локалки
-# model_path = "/Users/dariamishina/Downloads/openchat_3.5.Q4_K_M.gguf"
-# llm = Llama(model_path=model_path, n_ctx=8192, n_threads=8, n_gpu_layers=0)
+model_path = "/Users/dariamishina/Downloads/openchat_3.5.Q4_K_M.gguf"
+llm = Llama(model_path=model_path, n_ctx=8192, n_threads=8, n_gpu_layers=0)
 
-# Выгрузка модели из s3
-model_file_name = "openchat_3.5.Q4_K_M.gguf"
-
-local_model_path = f"/Users/dariamishina/Downloads/{model_file_name}"
-
-session = boto3.session.Session()
-s3 = session.client(
-    service_name="s3",
-    endpoint_url="https://storage.yandexcloud.net",
-    aws_access_key_id=AWS_ACCESS_KEY_ID,
-    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-    region_name="ru-central1",
-)
-logging.info("Инициализация клиента S3")
-
-s3_key = f"{MODELS_DIR}{model_file_name}"
-
-
-with BytesIO() as model_buffer:
-    s3.download_fileobj(BUCKET_NAME, s3_key, model_buffer)
-    model_buffer.seek(0)
-
-    # Сохранение модели локально - пока не придумала как без этого
-    with open(local_model_path, "wb") as local_model_file:
-        local_model_file.write(model_buffer.read())
-logging.info(f"Модель успешно загружена из S3")
-
-# собственно сама модель
-llm = Llama(model_path=local_model_path, n_ctx=8192, n_threads=8, n_gpu_layers=0)
-logging.info(f"Модель инициализирована")
+# # Выгрузка модели из s3
+# model_file_name = "openchat_3.5.Q4_K_M.gguf"
+#
+# local_model_path = f"/Users/dariamishina/Downloads/{model_file_name}"
+#
+# session = boto3.session.Session()
+# s3 = session.client(
+#     service_name="s3",
+#     endpoint_url="https://storage.yandexcloud.net",
+#     aws_access_key_id=AWS_ACCESS_KEY_ID,
+#     aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+#     region_name="ru-central1",
+# )
+# logging.info("Инициализация клиента S3")
+#
+# s3_key = f"{MODELS_DIR}{model_file_name}"
+#
+#
+# with BytesIO() as model_buffer:
+#     s3.download_fileobj(BUCKET_NAME, s3_key, model_buffer)
+#     model_buffer.seek(0)
+#
+#     # Сохранение модели локально - пока не придумала как без этого
+#     with open(local_model_path, "wb") as local_model_file:
+#         local_model_file.write(model_buffer.read())
+# logging.info(f"Модель успешно загружена из S3")
+#
+# # собственно сама модель
+# llm = Llama(model_path=local_model_path, n_ctx=8192, n_threads=8, n_gpu_layers=0)
+# logging.info(f"Модель инициализирована")
 
 # Переменные для статистики
 ratings = []
