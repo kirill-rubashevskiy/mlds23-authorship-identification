@@ -35,7 +35,7 @@ def main(cfg: DictConfig) -> None:
 
     # register startup hook to initialize webhook
     dp.startup.register(
-        on_startup, f"{cfg.bot.webhook.base_url}{cfg.bot.webhook.path}", TOKEN
+        on_startup, url=f"{cfg.bot.webhook.base_url}{cfg.bot.webhook.path}", token=TOKEN
     )
 
     # initialize Bot instance
