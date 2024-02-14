@@ -1,4 +1,0 @@
-beautifulsoup4==4.12.2
-pandas==2.1.1
-selenium==4.14.0
-transliterate==1.10.2
