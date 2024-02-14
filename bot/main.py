@@ -20,7 +20,7 @@ async def on_startup(bot, url, token):
     await bot.set_webhook(url=url, secret_token=token)
 
 
-@hydra.main(version_base=None, config_path="conf", config_name="config")
+@hydra.main(version_base=None, config_path="../conf", config_name="config")
 def main(cfg: DictConfig) -> None:
     # initialize Dispatcher instance
     dp = Dispatcher(
