@@ -1,0 +1,24 @@
+bot:
+  web_server:
+    host: "0.0.0.0"
+    port: 10000
+  webhook:
+    base_url: "https://mlds23-authorship-identification.onrender.com"
+    path: "/webhook"
+  estimator:
+    _target_: "bot.models.Estimator"
+    service_name: ${s3.service_name}
+    endpoint_url: ${s3.endpoint_url}
+    aws_access_key_id: ${s3.aws_access_key_id}
+    aws_secret_access_key: ${s3.aws_secret_access_key}
+    region_name: ${s3.region_name}
+    bucket: ${s3.bucket}
+    models_dir: "models/"
+    model_name: "kr-26-11-23-exp-1_pipeline.pkl"
+s3:
+  service_name: "s3"
+  endpoint_url: "https://storage.yandexcloud.net"
+  aws_access_key_id: "REDACTED_KEY_ID_1"
+  aws_secret_access_key: "REDACTED_SECRET_KEY_1"
+  region_name: "ru-cental1"
+  bucket: "mlds23-authorship-identification"

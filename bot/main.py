@@ -1,0 +1,66 @@
+import logging
+import os
+from functools import partial
+
+import hydra
+from aiogram import Bot, Dispatcher
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+from aiohttp import web
+from dotenv import load_dotenv
+from hydra.utils import instantiate
+from omegaconf import DictConfig
+
+from bot.handlers import router
+
+
+load_dotenv()
+TOKEN = os.getenv("TOKEN")
+
+
+async def on_startup(bot, url):
+    await bot.set_webhook(url=url)
+
+
+@hydra.main(version_base=None, config_path="../conf", config_name="config")
+def main(cfg: DictConfig) -> None:
+    # initialize Dispatcher instance
+    dp = Dispatcher(
+        estimator=instantiate(cfg.bot.estimator),
+        users=set(),
+        requests=[0],
+        ratings=[0, 0],
+    )
+
+    # include handlers router
+    dp.include_router(router)
+
+    # pass arguments to on_startup function
+    on_startup_with_args = partial(
+        on_startup, url=f"{cfg.bot.webhook.base_url}{cfg.bot.webhook.path}/{TOKEN}"
+    )
+
+    # register startup hook to initialize webhook
+    dp.startup.register(on_startup_with_args)
+
+    # initialize Bot instance
+    bot = Bot(token=TOKEN)
+
+    # create web.Application instance
+    app = web.Application()
+
+    # create SimpleRequestHandler instance
+    webhook_requests_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
+
+    # register webhook handler on application
+    webhook_requests_handler.register(app, path=f"{cfg.bot.webhook.path}/{TOKEN}")
+
+    # mount dispatcher startup and shutdown hooks to aiohttp application
+    setup_application(app, dp, bot=bot)
+
+    # start webserver
+    web.run_app(app, host=cfg.bot.web_server.host, port=cfg.bot.web_server.port)
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    main()
