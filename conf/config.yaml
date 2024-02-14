@@ -18,7 +18,7 @@ bot:
 s3:
   service_name: "s3"
   endpoint_url: "https://storage.yandexcloud.net"
-  aws_access_key_id: "YCAJErlaldUmioGbHQSqJ70MR"
-  aws_secret_access_key: "YCPSba_JgloNYSNWcnKO2CYCEB8PFR1Iwgr2jIUy"
+  aws_access_key_id: ${oc.env:AWS_ACCESS_KEY_ID}
+  aws_secret_access_key: ${oc.env:AWS_SECRET_ACCESS_KEY}
   region_name: "ru-cental1"
   bucket: "mlds23-authorship-identification"
