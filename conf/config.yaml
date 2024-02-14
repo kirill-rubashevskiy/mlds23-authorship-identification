@@ -13,6 +13,7 @@ bot:
     aws_secret_access_key: ${s3.aws_secret_access_key}
     region_name: ${s3.region_name}
     bucket: ${s3.bucket}
+    models_dir: "models/"
     model_name: "kr-26-11-23-exp-1_pipeline.pkl"
 s3:
   service_name: "s3"
