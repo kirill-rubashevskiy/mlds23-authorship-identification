@@ -34,7 +34,9 @@ def main(cfg: DictConfig) -> None:
     dp.include_router(router)
 
     # register startup hook to initialize webhook
-    dp.startup.register(on_startup, f"{cfg.webhook.base_url}{cfg.webhook.path}", TOKEN)
+    dp.startup.register(
+        on_startup, f"{cfg.bot.webhook.base_url}{cfg.bot.webhook.path}", TOKEN
+    )
 
     # initialize Bot instance
     bot = Bot(token=TOKEN)
@@ -46,7 +48,7 @@ def main(cfg: DictConfig) -> None:
     webhook_requests_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
 
     # register webhook handler on application
-    webhook_requests_handler.register(app, path=cfg.webhook.path)
+    webhook_requests_handler.register(app, path=cfg.bot.webhook.path)
 
     # mount dispatcher startup and shutdown hooks to aiohttp application
     setup_application(app, dp, bot=bot)
