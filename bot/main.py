@@ -17,8 +17,8 @@ load_dotenv()
 TOKEN = os.getenv("TOKEN")
 
 
-async def on_startup(bot, url, token):
-    await bot.set_webhook(url=url, secret_token=token)
+async def on_startup(bot, url):
+    await bot.set_webhook(url=url)
 
 
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
@@ -36,7 +36,7 @@ def main(cfg: DictConfig) -> None:
 
     # pass arguments to on_startup function
     on_startup_with_args = partial(
-        on_startup, url=f"{cfg.bot.webhook.base_url}{cfg.bot.webhook.path}", token=TOKEN
+        on_startup, url=f"{cfg.bot.webhook.base_url}{cfg.bot.webhook.path}/{TOKEN}"
     )
 
     # register startup hook to initialize webhook
@@ -52,7 +52,7 @@ def main(cfg: DictConfig) -> None:
     webhook_requests_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
 
     # register webhook handler on application
-    webhook_requests_handler.register(app, path=cfg.bot.webhook.path)
+    webhook_requests_handler.register(app, path=f"{cfg.bot.webhook.path}/{TOKEN}")
 
     # mount dispatcher startup and shutdown hooks to aiohttp application
     setup_application(app, dp, bot=bot)
