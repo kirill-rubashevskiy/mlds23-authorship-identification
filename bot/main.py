@@ -1,5 +1,6 @@
 import logging
 import os
+from functools import partial
 
 import hydra
 from aiogram import Bot, Dispatcher
@@ -33,10 +34,13 @@ def main(cfg: DictConfig) -> None:
     # include handlers router
     dp.include_router(router)
 
-    # register startup hook to initialize webhook
-    dp.startup.register(
+    # pass arguments to on_startup function
+    on_startup_with_args = partial(
         on_startup, url=f"{cfg.bot.webhook.base_url}{cfg.bot.webhook.path}", token=TOKEN
     )
+
+    # register startup hook to initialize webhook
+    dp.startup.register(on_startup_with_args)
 
     # initialize Bot instance
     bot = Bot(token=TOKEN)
