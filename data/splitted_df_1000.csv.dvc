@@ -1,0 +1,5 @@
+outs:
+- md5: 5b6d7628eb2cc6acd2532c2498d97f00
+  size: 10998879
+  hash: md5
+  path: splitted_df_1000.csv
