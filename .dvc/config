@@ -1,0 +1,6 @@
+[core]
+    remote = yandexcloud
+['remote "yandexcloud"']
+    url = s3://mlops-sentiment-analysis/data
+    endpointurl = https://storage.yandexcloud.net/
+    region = ru-central1
