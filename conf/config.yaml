@@ -13,8 +13,8 @@ bot:
     aws_access_key_id: ${s3.aws_access_key_id}
     aws_secret_access_key: ${s3.aws_secret_access_key}
     region_name: ${s3.region_name}
-    bucket: ${s3.bucket}
-    models_dir: "models/"
+    bucket: ${paths.bucket}
+    models_dir: ${paths.models}
     model_name: "kr-26-11-23-exp-1_pipeline.pkl"
 s3:
   service_name: "s3"
@@ -22,4 +22,8 @@ s3:
   aws_access_key_id: ${oc.env:AWS_ACCESS_KEY_ID}
   aws_secret_access_key: ${oc.env:AWS_SECRET_ACCESS_KEY}
   region_name: "ru-cental1"
+paths:
   bucket: "mlds23-authorship-identification"
+  models: "models/"
+  raw_data: "raw_data/"
+  split_data: "splitted_data/"
