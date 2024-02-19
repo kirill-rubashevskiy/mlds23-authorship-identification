@@ -1,0 +1,6 @@
+[core]
+    remote = yandexcloud
+['remote "yandexcloud"']
+    url = s3://mlds23-authorship-identification/dvc
+    endpointurl = https://storage.yandexcloud.net/
+    region = ru-central1
