@@ -1,13 +1,18 @@
-import logging
 import asyncio
-from aiogram import Bot, Dispatcher, types, F
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-from aiogram.filters.command import Command
-from llama_cpp import Llama
+import logging
+
+# from llama_cpp import Llama
 import os
+
+from aiogram import Bot, Dispatcher, F, types
+from aiogram.filters.command import Command
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from dotenv import load_dotenv
-import boto3
-from io import BytesIO
+
+# import boto3
+# from io import BytesIO
+from model import LLMWrapper
+
 
 BUCKET_NAME = "mlds23-authorship-identification"
 MODELS_DIR = "models/"
@@ -17,15 +22,18 @@ TOKEN = os.getenv("TOKEN")
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 
-
-bot = Bot(token=TOKEN)
-dp = Dispatcher()
-
-logging.basicConfig(level=logging.INFO)
-
 # Инициализация модели от LlamaCpp - если загружаем с локалки
 model_path = "/Users/dariamishina/Downloads/openchat_3.5.Q4_K_M.gguf"
-llm = Llama(model_path=model_path, n_ctx=8192, n_threads=8, n_gpu_layers=0)
+llm_wrapper = LLMWrapper(model_path=model_path)
+
+bot = Bot(token=TOKEN)
+dp = Dispatcher(
+    llm_wrapper=llm_wrapper,
+    ratings=[],
+    usage_stats={"total_requests": 0, "average_rating": 0},
+)
+
+logging.basicConfig(level=logging.INFO)
 
 # # Выгрузка модели из s3
 # model_file_name = "openchat_3.5.Q4_K_M.gguf"
@@ -55,88 +63,38 @@ llm = Llama(model_path=model_path, n_ctx=8192, n_threads=8, n_gpu_layers=0)
 # logging.info(f"Модель успешно загружена из S3")
 #
 # # собственно сама модель
-# llm = Llama(model_path=local_model_path, n_ctx=8192, n_threads=8, n_gpu_layers=0)
+# llm_wrapper = LLMWrapper(model_path=local_model_path)
 # logging.info(f"Модель инициализирована")
-
-# Переменные для статистики
-ratings = []
-usage_stats = {"total_requests": 0, "average_rating": 0}
 
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     await message.answer(
-        "Привет! Я бот для генерации ответов на вопросы об авторстве отрывков из русской литературы. Введите свой вопрос после команды /test."
+        "Привет! Я бот для генерации ответов на вопросы об авторстве отрывков из русской литературы. Введите свой вопрос после команды /predict."
     )
 
 
-@dp.message(F.text, Command("test"))
-async def generate_response(message: types.Message):
-    global usage_stats
+@dp.message(F.text, Command("predict"))
+async def cmd_predict(message: types.Message, llm_wrapper, usage_stats: dict):
     usage_stats["total_requests"] += 1
-
-    command_text = message.text[len("/test") :].strip()
-    if command_text:
-        logging.info(f"Текст от пользователя получен")
-        # generated_text = command_text + ' NEW!!!' #заглушка для теста бота
-        input_text = command_text
-        prompt = f"GPT4 Correct User: кто из русских классиков написал эти строки: {input_text}<|end_of_turn|>GPT4 Correct Assistant:"
-        output = llm(prompt, max_tokens=512, stop=["</s>"], echo=True)
-        logging.info(f"ответ от llm готов")
-        generated_text = output["choices"][0]["text"].split("GPT4 Correct Assistant: ")[
-            1
-        ]
-        await message.reply(generated_text)
-        logging.info(f"ответ отправлен")
-        await message.answer(
-            "С помощью команды /rate вы можете оценить качество ответа"
-        )
-    else:
-        await message.reply("Напишите ваш запрос после команды /test")
-
-
-@dp.message(Command("file"))
-async def process_file(message: types.Message):
-    if message.document:
-        logging.info(f"Файл от пользователя получен")
-        file_id = message.document.file_id
-        file = await bot.get_file(file_id)
-        file_path = file.file_path
-        file_data = await bot.download_file(file_path)
-        file_content = file_data.read()
-        logging.info(f"Файл прочитан")
-        text_from_file = file_content.decode("utf-8").strip()
-        logging.info(f"Преобразованы байтовые данные в строку")
-        prompt = f"GPT4 Correct User: кто из русских классиков написал эти строки: {text_from_file}GPT4 Correct Assistant:"
-        output = llm(prompt, max_tokens=512, stop=["</s>"], echo=True)
-        logging.info(f"ответ от llm готов")
-        generated_text = output["choices"][0]["text"].split("GPT4 Correct Assistant: ")[
-            1
-        ]
-        await message.reply(generated_text)
-        logging.info(f"ответ отправлен")
-        await message.answer(
-            "С помощью команды /rate вы можете оценить качество ответа"
-        )
-    else:
-        await message.reply(
-            "Пожалуйста, прикрепите файл формата txt после команды /file"
-        )
+    command_text = message.text.removeprefix("/predict")
+    generated_text = llm_wrapper.predict(command_text)
+    await message.reply(generated_text)
+    logging.info("ответ отправлен")
 
 
 @dp.message(Command("help"))
 async def cmd_help(message: types.Message):
-    help_text = """
-    Это бот для генерации ответов на вопросы об авторстве отрывков из русской литературы. У него есть следующие команды: 
-    - /start - начать работу; 
-    - /test - отправить текст отрывка для определения авторства текста; 
-    - /file - отправить файл в формате txt c отрывком для определения авторства текста; 
-    - /rate - оценить работу бота;
-    - /stats — получить статистику работы бота
-    - /help — получить список команд бота
-    
-    TL;DR: просто отправьте текстовый фрагмент после команды /test, и я постараюсь ответить.
-    """
+    help_text = (
+        "Это бот для генерации ответов на вопросы об авторстве отрывков из русской литературы. У него есть следующие команды:\n"
+        "- /start - начать работу;\n "
+        "- /predict - отправить текст отрывка для определения авторства текста;\n "
+        "- /predict_from_file - отправить файл в формате txt c отрывком для определения авторства текста;\n "
+        "- /rate - оценить работу бота;\n "
+        "- /stats — получить статистику работы бота\n "
+        "- /help — получить список команд бота\n "
+        "TL;DR: просто отправьте текстовый фрагмент после команды /predict, и я постараюсь ответить."
+    )
     await message.answer(help_text)
 
 
@@ -148,12 +106,11 @@ async def cmd_rate(message: types.Message):
 
 
 @dp.message(lambda message: message.text.isdigit() and 1 <= int(message.text) <= 5)
-async def process_rating(message: types.Message):
-    global ratings, usage_stats
+async def process_rating(message: types.Message, ratings: list, usage_stats: dict):
     rating = int(message.text)
     ratings.append(rating)
 
-    logging.info(f"пересчет срднего рейтинга")
+    logging.info("пересчет среднего рейтинга")
     total_ratings = sum(ratings)
     average_rating = total_ratings / len(ratings)
     usage_stats["average_rating"] = round(average_rating, 2)
@@ -164,8 +121,7 @@ async def process_rating(message: types.Message):
 
 
 @dp.message(Command("stats"))
-async def cmd_stats(message: types.Message):
-    global usage_stats
+async def cmd_stats(message: types.Message, usage_stats: dict):
     stats_text = (
         f"Статистика использования сервиса:\n"
         f"Общее количество запросов: {usage_stats['total_requests']}\n"
