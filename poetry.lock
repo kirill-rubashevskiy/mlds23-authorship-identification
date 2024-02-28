@@ -5729,6 +5729,17 @@ files = [
 dev = ["pytest (>=6)", "pytest-cov", "pytest-timeout"]
 
 [[package]]
+name = "simplemma"
+version = "0.9.1"
+description = "A simple multilingual lemmatizer for Python."
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "simplemma-0.9.1-py3-none-any.whl", hash = "sha256:7f7371b325302ce522d90bae85b29839f87918fb1201d38359de9ea3b7467e65"},
+    {file = "simplemma-0.9.1.tar.gz", hash = "sha256:98ebcaf659bd1e281d9d87716a95d5c148d318dc18d866d3549990d6b3334749"},
+]
+
+[[package]]
 name = "six"
 version = "1.16.0"
 description = "Python 2 and 3 compatibility utilities"
@@ -7046,4 +7057,4 @@ test = ["zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "e1a65f805b3754ce1191ddae26bedb63c63904bad80809ad3bd3059d244fd9a3"
+content-hash = "57fa4eb9b4d44ad619a93f83651279b077ef971de89465f904349ee50b6f13a7"
