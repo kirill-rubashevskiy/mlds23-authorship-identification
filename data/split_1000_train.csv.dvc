@@ -1,0 +1,5 @@
+outs:
+- md5: f17f4c0de3bd50647194d0cc0c459e42
+  size: 8982525
+  hash: md5
+  path: split_1000_train.csv
