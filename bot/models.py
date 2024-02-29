@@ -2,10 +2,10 @@ import numpy as np
 import pandas as pd
 
 from data_preproc.src.utils import preprocess_text5
-from mlds23_authorship_identification.models.loader import load_model
-from mlds23_authorship_identification.models.postprocessing import (
+from mlds23_authorship_identification.utils import (
     confident_predict,
     label2name,
+    load_model,
 )
 
 
