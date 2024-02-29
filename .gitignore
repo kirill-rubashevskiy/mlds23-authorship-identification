@@ -160,3 +160,12 @@ cython_debug/
 .idea/
 *.csv
 *.pkl
+
+# catboost training data
+**/catboost_info/
+
+# wandb experiments data
+**/wandb/
+
+# hydra data
+**/outputs/
