@@ -11,7 +11,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
-from .transformers import TextTransformer
+from .preprocessing import TextTransformer
 
 
 @dataclass

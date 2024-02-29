@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from data_preproc.src.utils import preprocess_text5
+from mlds23_authorship_identification.preprocessing import preprocess_text5
 from mlds23_authorship_identification.utils import (
     confident_predict,
     label2name,
