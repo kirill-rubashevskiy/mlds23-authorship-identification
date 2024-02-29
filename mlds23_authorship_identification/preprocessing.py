@@ -3,9 +3,54 @@ from string import punctuation
 
 import nltk
 import pandas as pd
+import simplemma
 from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer, word_tokenize
 from pymystem3 import Mystem
+from sklearn.base import BaseEstimator, TransformerMixin
+
+
+class TextTransformer(BaseEstimator, TransformerMixin):
+    """
+    Removes punctuation and stopwords and lemmatizes text.
+    """
+
+    def __init__(
+        self,
+        remove_punctuation: bool = True,
+        remove_stopwords: bool = True,
+        lemmatize: bool = True,
+    ):
+        self.remove_punctuation = remove_punctuation
+        self.remove_stopwords = remove_stopwords
+        self.lemmatize = lemmatize
+        self.tokenizer = None
+        if remove_punctuation:
+            self.tokenizer = nltk.RegexpTokenizer(r"[А-яЁё]+")
+        else:
+            self.tokenizer = nltk.NLTKWordTokenizer()
+        if remove_stopwords:
+            self.stopwords = nltk.corpus.stopwords.words("russian")
+        if lemmatize:
+            self.lemmatizer = simplemma
+
+    def _preprocess(self, text):
+        tokens = self.tokenizer.tokenize(text.lower())
+        if self.remove_stopwords:
+            tokens = [token for token in tokens if token not in self.stopwords]
+        if self.lemmatize:
+            tokens = [self.lemmatizer.lemmatize(token, lang="ru") for token in tokens]
+        return " ".join(tokens)
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        if isinstance(X, pd.Series):
+            X = X.apply(self._preprocess)
+        else:
+            X = pd.Series(X, name="text").apply(self._preprocess)
+        return X
 
 
 my_stopwords = []  # заглушка если придумаем стопслова
@@ -245,3 +290,132 @@ def tokenizing(text):
     # Remove Stopwords from tokens
     result = [i for i in tokens if i not in russian_stopwords]
     return result
+
+
+# расшифровка меток
+label2name = {
+    0: "А. Пушкин",
+    1: "Д. Мамин-Сибиряк",
+    2: "И. Тургенев",
+    3: "А. Чехов",
+    4: "Н. Гоголь",
+    5: "И. Бунин",
+    6: "А. Куприн",
+    7: "А. Платонов",
+    8: "В. Гаршин",
+    9: "Ф. Достоевский",
+}
+
+
+def clean_sentence(sentence):
+    """
+    заменяем все некириллические символы и не знаки препинания на пробелы
+
+    >>> clean_sentence("как-то - 'рано' 'Marta'? пела: лЕСОМ, * &нифига(она) не ела")
+    "как-то - 'рано' ''? пела: лЕСОМ,  нифига(она) не ела"
+    """
+    sentence = re.sub(r"[^а-яА-ЯёЁ \-\"!'(),.:;?]", "", sentence)
+    return sentence
+
+
+def make_punkt(sentence):
+    """
+    заменяем знаки препинания на их кодовые обозначения
+
+    >>> make_punkt(', двадцать-два, - номер, помереть: не сейчас!')
+    ' CM  двадцать-два CM  DSH номер CM  помереть CL  не сейчас EXCL '
+    """
+    repl = [
+        ("...", " MP "),
+        ("..", " MP "),
+        (".", " PNT "),
+        (",", " CM "),
+        ("?", " QST "),
+        ("!", " EXCL "),
+        (":", " CL "),
+        (";", " SMC "),
+    ]
+    for p, r in repl:
+        sentence = sentence.replace(p, r)
+    sentence = re.sub(
+        r"\s?-\s|\s-\s?", " DSH ", sentence
+    )  # не трогать тире в слове (как-то)
+
+    return sentence
+
+
+def make_grams(sentence):
+    """
+    заменяет слова в тексте на соответствующие им лексические кодировщики (часть речи, падеж и тп)
+
+    >>> make_grams(' CM  двадцать-два CM  DSH номер CM  помереть CL  не сейчас EXCL ')
+    'CM NUM=(вин|им) NUM=(вин,муж,неод|им,муж|вин,сред|им,сред) CM DSH S,муж,неод=(вин,ед|им,ед) CM V,нп=инф,сов CL PART= ADV= EXCL'
+    """
+
+    mystem_analyzer = Mystem()
+    morph = mystem_analyzer.analyze(sentence)
+
+    ret = []
+    for lex in morph:
+        if lex["text"] in ["MP", "PNT", "CM", "QST", "EXCL", "CL", "SMC", "DSH"]:
+            ret.append(lex["text"])
+            continue
+
+        try:
+            if "analysis" in lex.keys() and "gr" in lex["analysis"][0].keys():
+                ret.append(lex["analysis"][0]["gr"])
+        except Exception as e:
+            # встретил что-то непотребное в стиле ру-ру-ру
+            print(e)
+            pass
+    return " ".join(ret)
+
+
+def make_grams_brief(sentence):
+    """
+    заменяет слова в тексте на соответствующие им лексические кодировщики
+    но уже в сокращенном варианте
+
+    >>> make_grams_brief(' CM  двадцать-два CM  DSH номер CM  помереть CL  не сейчас EXCL ')
+    'CM NUM NUM CM DSH S,муж,неод CM V,нп CL PART ADV EXCL'
+    """
+
+    mystem_analyzer = Mystem()
+    morph = mystem_analyzer.analyze(sentence)
+
+    ret = []
+    for lex in morph:
+        if lex["text"] in ["MP", "PNT", "CM", "QST", "EXCL", "CL", "SMC", "DSH"]:
+            ret.append(lex["text"])
+            continue
+
+        try:
+            if "analysis" in lex.keys() and "gr" in lex["analysis"][0].keys():
+                ret.append(lex["analysis"][0]["gr"].split("=")[0])
+        except Exception as e:
+            # встретил что-то непотребное в стиле ру-ру-ру
+            print(e)
+            pass
+    return " ".join(ret)
+
+
+def prepare_text(Text_corp, full=True):
+    """
+    итоговая предобработка для наших моделей
+    >>> prepare_text(["Мама. Мыла раму папе"], full=True)
+    ['S,жен,од=им,ед PNT V,несов,пе=прош,ед,изъяв,жен S,жен,неод=вин,ед S,муж,од=(пр,ед|дат,ед)']
+
+    >>> prepare_text(["Мама. Мыла раму папе"], full=False)
+    ['S,жен,од PNT V,несов,пе S,жен,неод S,муж,од']
+    """
+
+    res = []
+    for text in Text_corp:
+        text = clean_sentence(text)
+        text = make_punkt(text)
+        if full:
+            text = make_grams(text)
+        else:
+            text = make_grams_brief(text)
+        res.append(text)
+    return res
