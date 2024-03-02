@@ -6,6 +6,9 @@ from nltk import pos_tag
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
+nltk.download("universal_tagset")
+
+
 class TextStatsExtractor(BaseEstimator, TransformerMixin):
     """
     Extracts sentence and/or token and/or pos statistics from corpus of texts.
@@ -47,6 +50,8 @@ class TextStatsExtractor(BaseEstimator, TransformerMixin):
         if self.tkn_stats:
             self.tkn_stats_list = ["avg_tkn_len", "ttr"]
         if self.pos_stats:
+            pos_tagger = partial(pos_tag, tagset="universal")
+            pos_tagger(["test"])
             self.pos_tagger = partial(pos_tag, tagset="universal", lang="rus")
             self.pos_tags_list = ["VERB", "NOUN", "ADJ", "ADV", "ADP", "CONJ", "PRON"]
             self.pos_stats_list = [
