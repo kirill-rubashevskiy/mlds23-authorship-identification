@@ -6,9 +6,6 @@ from nltk import pos_tag
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
-nltk.download("universal_tagset")
-
-
 class TextStatsExtractor(BaseEstimator, TransformerMixin):
     """
     Extracts sentence and/or token and/or pos statistics from corpus of texts.
@@ -50,15 +47,13 @@ class TextStatsExtractor(BaseEstimator, TransformerMixin):
         if self.tkn_stats:
             self.tkn_stats_list = ["avg_tkn_len", "ttr"]
         if self.pos_stats:
-            pos_tagger = partial(pos_tag, tagset="universal")
-            pos_tagger(["test"])
-            self.pos_tagger = partial(pos_tag, tagset="universal", lang="rus")
-            self.pos_tags_list = ["VERB", "NOUN", "ADJ", "ADV", "ADP", "CONJ", "PRON"]
+            self.pos_tagger = partial(pos_tag, lang="rus")
+            self.pos_tags_list = ["V", "S", "A", "ADV", "PR", "CONJ", "S-PRO", "A-PRO"]
             self.pos_stats_list = [
                 "noun2verb",
                 "adj2noun",
                 "adv2verb",
-                "adp2noun",
+                "pr2noun",
                 "conj2noun",
                 "pron2noun",
                 "verb2word",
@@ -72,9 +67,9 @@ class TextStatsExtractor(BaseEstimator, TransformerMixin):
         sent_stats = dict.fromkeys(self.sent_stats_list, 0)
         for token in punct_tokens:
             sent_stats[token] += 1
-        if sent_stats["."] + sent_stats["!"] + sent_stats["?"] > 0:
+        if sent_stats["..."] + sent_stats["."] + sent_stats["!"] + sent_stats["?"] > 0:
             sent_stats["avg_snt_len"] = len(text) / (
-                sent_stats["."] + sent_stats["!"] + sent_stats["?"]
+                sent_stats["."] + sent_stats["!"] + sent_stats["?"] + sent_stats["..."]
             )
         else:
             sent_stats["avg_snt_len"] = len(text)
@@ -93,22 +88,25 @@ class TextStatsExtractor(BaseEstimator, TransformerMixin):
         pos_count = dict.fromkeys(self.pos_tags_list, 0)
         _, tags = zip(*self.pos_tagger(word_tokens), strict=True)
         for tag in tags:
+            tag = tag.split("=")[0]
             if tag in pos_count:
                 pos_count[tag] += 1
-        if pos_count["NOUN"] and pos_count["VERB"]:
-            pos_stats["noun2verb"] = pos_count["NOUN"] / pos_count["VERB"]
-        if pos_count["ADJ"] and pos_count["NOUN"]:
-            pos_stats["adj2noun"] = pos_count["ADJ"] / pos_count["NOUN"]
-        if pos_count["ADV"] and pos_count["VERB"]:
-            pos_stats["adv2verb"] = pos_count["ADV"] / pos_count["VERB"]
-        if pos_count["ADP"] and pos_count["NOUN"]:
-            pos_stats["adp2noun"] = pos_count["ADP"] / pos_count["NOUN"]
-        if pos_count["CONJ"] and pos_count["NOUN"]:
-            pos_stats["conj2noun"] = pos_count["CONJ"] / pos_count["NOUN"]
-        if pos_count["PRON"] and pos_count["NOUN"]:
-            pos_stats["pron2noun"] = pos_count["PRON"] / pos_count["NOUN"]
-        if pos_count["VERB"]:
-            pos_stats["verb2word"] = pos_count["VERB"] / len(word_tokens)
+        if pos_count["S"] and pos_count["V"]:
+            pos_stats["noun2verb"] = pos_count["S"] / pos_count["V"]
+        if pos_count["A"] and pos_count["S"]:
+            pos_stats["adj2noun"] = pos_count["A"] / pos_count["S"]
+        if pos_count["ADV"] and pos_count["V"]:
+            pos_stats["adv2verb"] = pos_count["ADV"] / pos_count["V"]
+        if pos_count["PR"] and pos_count["S"]:
+            pos_stats["pr2noun"] = pos_count["PR"] / pos_count["S"]
+        if pos_count["CONJ"] and pos_count["S"]:
+            pos_stats["conj2noun"] = pos_count["CONJ"] / pos_count["S"]
+        if (pos_count["S-PRO"] or pos_count["A-PRO"]) and pos_count["S"]:
+            pos_stats["pron2noun"] = (
+                pos_count["S-PRO"] + pos_count["A-PRO"]
+            ) / pos_count["S"]
+        if pos_count["V"]:
+            pos_stats["verb2word"] = pos_count["V"] / len(word_tokens)
         return pos_stats
 
     def _extract_text_stats(self, text: str) -> dict:
