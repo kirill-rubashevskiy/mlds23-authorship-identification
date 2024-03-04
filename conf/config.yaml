@@ -31,11 +31,11 @@ random_state: 42
 wandb:
   entity: "mlds23_ai"
   project: "authorship_identification"
-experiment:
+run:
   metric: "f1_weighted"
-  classifier: "BoW MultinomialNB + TF-IDF LR + VC"
+  clf: "BoW MultinomialNB + TF-IDF LR + VC"
   n_splits: 5
-  n_iter: 2
+  n_iter: 10
   cv: "StratifiedGroupKFold"
   train: "split_1000_train.csv"
   test: "split_1000_test.csv"
