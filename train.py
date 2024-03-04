@@ -8,21 +8,19 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import RandomizedSearchCV, StratifiedGroupKFold
 
 import wandb
-from mlds23_authorship_identification.classifiers import clfs, ensembles
+from mlds23_authorship_identification.classifiers import clfs
 
 
 @hydra.main(config_path="conf", config_name="config", version_base=None)
 def main(cfg: OmegaConf):
 
     # initialize wandb run
-    wandb.init(
-        entity=cfg.wandb.entity, project=cfg.wandb.project, tags=cfg.experiment.tags
-    )
+    wandb.init(entity=cfg.wandb.entity, project=cfg.wandb.project, tags=cfg.run.tags)
     logging.info("W&B run initialized")
 
     # load data
-    train = pd.read_csv(f"data/{cfg.experiment.train}", index_col=0)
-    test = pd.read_csv(f"data/{cfg.experiment.test}", index_col=0)
+    train = pd.read_csv(f"data/{cfg.run.train}", index_col=0)
+    test = pd.read_csv(f"data/{cfg.run.test}", index_col=0)
     X_train = train["text"]
     y_train = train["target"]
     groups_train = train["book"]
@@ -31,10 +29,7 @@ def main(cfg: OmegaConf):
     logging.info("Data loaded")
 
     # load model
-    if cfg.experiment.classifier in clfs:
-        model = clfs[cfg.experiment.classifier]
-    else:
-        model = ensembles[cfg.experiment.classifier]
+    model = clfs[cfg.run.clf]
     logging.info("Model loaded")
 
     # run random search
@@ -42,9 +37,10 @@ def main(cfg: OmegaConf):
         estimator=model.pipeline,
         param_distributions=model.params,
         random_state=cfg.random_state,
-        cv=StratifiedGroupKFold(n_splits=cfg.experiment.n_splits),
-        n_iter=cfg.experiment.n_iter,
-        scoring=cfg.experiment.metric,
+        cv=StratifiedGroupKFold(n_splits=cfg.run.n_splits),
+        n_iter=cfg.run.n_iter,
+        scoring=cfg.run.metric,
+        n_jobs=-1,
     )
     r_search.fit(X_train, y_train, groups=groups_train)
     best_index = r_search.best_index_
@@ -61,19 +57,19 @@ def main(cfg: OmegaConf):
 
     # log run params
     wandb.config["run"] = {
-        "model": cfg.experiment.classifier,
-        "train": cfg.experiment.train,
-        "test": cfg.experiment.test,
+        "model": cfg.run.clf,
+        "train": cfg.run.train,
+        "test": cfg.run.test,
         "random_state": cfg.random_state,
-        "cv": cfg.experiment.cv,
-        "n_splits": cfg.experiment.n_splits,
+        "cv": cfg.run.cv,
+        "n_splits": cfg.run.n_splits,
     }
     logging.info("Run params logged")
 
     # log model best params
     params_to_log = dict()
     for key, value in r_search.best_params_.items():
-        step, param = key.split("__")
+        *_, step, param = key.split("__")
         if step not in params_to_log:
             params_to_log[step] = dict()
         params_to_log[step][param] = value
