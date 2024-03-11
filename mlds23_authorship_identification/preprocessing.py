@@ -31,15 +31,13 @@ class TextTransformer(BaseEstimator, TransformerMixin):
             self.tokenizer = nltk.NLTKWordTokenizer()
         if remove_stopwords:
             self.stopwords = nltk.corpus.stopwords.words("russian")
-        if lemmatize:
-            self.lemmatizer = simplemma
 
     def _preprocess(self, text):
         tokens = self.tokenizer.tokenize(text.lower())
         if self.remove_stopwords:
             tokens = [token for token in tokens if token not in self.stopwords]
         if self.lemmatize:
-            tokens = [self.lemmatizer.lemmatize(token, lang="ru") for token in tokens]
+            tokens = [simplemma.lemmatize(token, lang="ru") for token in tokens]
         return " ".join(tokens)
 
     def fit(self, X, y=None):
