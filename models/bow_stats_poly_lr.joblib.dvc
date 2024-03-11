@@ -1,0 +1,5 @@
+outs:
+- md5: c9438f0528323a966cede141cf47f6c5
+  size: 14048161
+  hash: md5
+  path: bow_stats_poly_lr.joblib
