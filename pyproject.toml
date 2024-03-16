@@ -22,11 +22,11 @@ python-dotenv = "^1.0.1"
 dvc = "^3.45.0"
 dvc-s3 = "^3.0.1"
 simplemma = "^0.9.1"
-optuna = "^3.5.0"
-ruts = "^0.8.1"
+
 
 [tool.poetry.group.ml.dependencies]
 catboost = "^1.2.2"
+optuna = "^3.5.0"
 
 [tool.poetry.group.dl.dependencies]
 transformers = "^4.37.2"
@@ -54,13 +54,23 @@ matplotlib = "^3.8.2"
 seaborn = "^0.13.2"
 spacy = "^3.7.3"
 gensim = "^4.3.2"
-
+ruts = "^0.8.1"
 
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.0.0"
 pytest-asyncio = "^0.23.4"
 coverage = "^7.4.1"
+
+
+[tool.poetry.group.app.dependencies]
+fastapi = "^0.110.0"
+uvicorn = "^0.28.0"
+python-multipart = "^0.0.9"
+psycopg2-binary = "^2.9.9"
+redis = "^5.0.3"
+fastapi-cache2 = "^0.2.1"
+sqlalchemy = "^2.0.28"
 
 [tool.black]
 line-length = 90

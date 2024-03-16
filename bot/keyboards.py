@@ -1,15 +1,29 @@
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
-from aiogram.utils.keyboard import ReplyKeyboardBuilder
+from aiogram.types import InlineKeyboardMarkup
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
-def get_rate_kb() -> ReplyKeyboardMarkup:
-    """
-    Function generates keyboard to rate bot.
+start_kb_texts = [
+    "определить автора текста",
+    "определить авторов нескольких текстов",
+    "получить подсказку по работе бота",
+    "оценить работу бота",
+    "получить статистику по работе бота",
+]
 
-    :return: rate keyboard
-    """
-    kb = ReplyKeyboardBuilder()
+start_kb_callback_data = ["predict_text", "predict_texts", "help", "rate", "stats"]
+
+
+def get_start_kb() -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    for text, callback_data in zip(start_kb_texts, start_kb_callback_data, strict=True):
+        builder.button(text=text, callback_data=callback_data)
+    builder.adjust(1)
+    return builder.as_markup(resize_keyboard=True)
+
+
+def get_rate_kb() -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
     for i in range(1, 6):
-        kb.add(KeyboardButton(text=str(i), callback_data=f"num_{str(i)}"))
-
-    return kb.as_markup(resize_keyboard=True)
+        builder.button(text=f"{i}", callback_data=f"rated_{i}")
+    builder.adjust(1)
+    return builder.as_markup(resize_keyboard=True)

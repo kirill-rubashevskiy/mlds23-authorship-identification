@@ -8,7 +8,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 class TextStatsExtractor(BaseEstimator, TransformerMixin):
     """
-    Extracts sentence and/or token and/or pos statistics from corpus of texts.
+    Extracts sentence, token, and pos statistics from corpus of texts.
     """
 
     def __init__(
