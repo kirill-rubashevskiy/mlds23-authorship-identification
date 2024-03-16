@@ -4,10 +4,13 @@ from string import punctuation
 import nltk
 import pandas as pd
 import simplemma
-from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer, word_tokenize
 from pymystem3 import Mystem
 from sklearn.base import BaseEstimator, TransformerMixin
+
+
+nltk.download("stopwords")
+nltk.download("averaged_perceptron_tagger_ru")
 
 
 class TextTransformer(BaseEstimator, TransformerMixin):
@@ -52,9 +55,7 @@ class TextTransformer(BaseEstimator, TransformerMixin):
 
 
 my_stopwords = []  # заглушка если придумаем стопслова
-nltk.download("stopwords")
-nltk.download("wordnet")
-russian_stopwords_new = stopwords.words("russian")
+russian_stopwords_new = nltk.corpus.stopwords.words("russian")
 russian_stopwords_new.extend(my_stopwords)
 not_stopwords = {"не", "ни"}
 russian_stopwords = [word for word in russian_stopwords_new if word not in not_stopwords]
@@ -258,29 +259,6 @@ def preprocess_text4(text, tokenize=True, tostr=True):
     if tostr:
         tokens = " ".join(tokens)  # чтобы сделать не список, а строку
     return tokens
-
-
-# удаляем цифры, http, приводим к нижнему регистру, убираем пробелы и пунктуациюб при необходимости лемматризируем
-def preprocess_text5(
-    text: str, remove_stopwords: bool = False, lemmatize: bool = False
-) -> str:
-
-    text = remove_http(text)
-    text = convert_to_lower(text)
-
-    text = " ".join(tokenizer.tokenize(text))  # убирает цифры и пунктуацию
-
-    text = text.replace("\n", "").replace("\r", "")
-
-    if remove_stopwords:
-        text = " ".join(
-            [token for token in word_tokenize(text) if token not in russian_stopwords]
-        )
-
-    if lemmatize:
-        text = " ".join(mystem.lemmatize(text))
-
-    return text
 
 
 def tokenizing(text):
