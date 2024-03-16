@@ -5,10 +5,9 @@ import hydra
 from aiogram import Bot, Dispatcher
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiohttp import web
-from hydra.utils import instantiate
 from omegaconf import DictConfig
 
-from bot.handlers import router
+from bot.routers import items, users
 
 
 async def on_startup(bot, url):
@@ -18,24 +17,18 @@ async def on_startup(bot, url):
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
 def main(cfg: DictConfig) -> None:
     # initialize Dispatcher instance
-    dp = Dispatcher(
-        estimator=instantiate(cfg.bot.estimator),
-        users=set(),
-        requests=[0],
-        ratings=[0, 0],
-    )
+    dp = Dispatcher(app_url=cfg.bot.app_url)
 
-    # include handlers router
-    dp.include_router(router)
-
-    # pass arguments to on_startup function
-    on_startup_with_args = partial(
-        on_startup,
-        url=f"{cfg.bot.webhook.base_url}{cfg.bot.webhook.path}/{cfg.bot.token}",
-    )
+    # include routers
+    dp.include_routers(items.router, users.router)
 
     # register startup hook to initialize webhook
-    dp.startup.register(on_startup_with_args)
+    dp.startup.register(
+        partial(
+            on_startup,
+            url=f"{cfg.bot.base_webhook_url}{cfg.bot.webhook_path}/{cfg.bot.token}",
+        )
+    )
 
     # initialize Bot instance
     bot = Bot(token=cfg.bot.token)
@@ -47,13 +40,13 @@ def main(cfg: DictConfig) -> None:
     webhook_requests_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
 
     # register webhook handler on application
-    webhook_requests_handler.register(app, path=f"{cfg.bot.webhook.path}/{cfg.bot.token}")
+    webhook_requests_handler.register(app, path=f"{cfg.bot.webhook_path}/{cfg.bot.token}")
 
     # mount dispatcher startup and shutdown hooks to aiohttp application
     setup_application(app, dp, bot=bot)
 
     # start webserver
-    web.run_app(app, host=cfg.bot.web_server.host, port=cfg.bot.web_server.port)
+    web.run_app(app, host=cfg.bot.host, port=cfg.bot.port)
 
 
 if __name__ == "__main__":
