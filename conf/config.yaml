@@ -1,21 +1,28 @@
+defaults:
+  - _self_
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+hydra:
+  output_subdir: null
+  run:
+    dir: .
+app:
+  model_name: "bow_stats_poly_lr.joblib"
+  host: "0.0.0.0"
+  port: ${oc.decode:${oc.env:APP_PORT}}
 bot:
   token: ${oc.env:TOKEN}
-  web_server:
-    host: "0.0.0.0"
-    port: 10000
-  webhook:
-    base_url: "https://mlds23-authorship-identification.onrender.com"
-    path: "/webhook"
-  estimator:
-    _target_: "bot.models.Estimator"
-    service_name: ${s3.service_name}
-    endpoint_url: ${s3.endpoint_url}
-    aws_access_key_id: ${s3.aws_access_key_id}
-    aws_secret_access_key: ${s3.aws_secret_access_key}
-    region_name: ${s3.region_name}
-    bucket: ${paths.bucket}
-    models_dir: ${paths.models}
-    model_name: "kr-26-11-23-exp-1_pipeline.pkl"
+  host: "0.0.0.0"
+  port: ${oc.decode:${oc.env:BOT_PORT}}
+  base_webhook_url: ${oc.env:BASE_WEBHOOK_URL}
+  webhook_path: "/webhook"
+  app_url: ${oc.env:APP_URL}
+redis:
+  host: ${oc.env:REDIS_HOST}
+dvc:
+  remote: yandexcloud
+  access_key_id: ${s3.aws_access_key_id}
+  secret_access_key: ${s3.aws_secret_access_key}
 s3:
   service_name: "s3"
   endpoint_url: "https://storage.yandexcloud.net"
