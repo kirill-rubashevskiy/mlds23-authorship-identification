@@ -2,7 +2,6 @@ import pickle
 from io import BytesIO
 
 import boto3
-import numpy as np
 
 
 def load_model(
@@ -44,7 +43,7 @@ def load_model(
 
 
 label2name = {
-    -1: "не знаю",
+    -1: "не могу определить автора",
     0: "А. Пушкин",
     1: "Д. Мамин-Сибиряк",
     2: "И. Тургенев",
@@ -56,9 +55,3 @@ label2name = {
     8: "В. Гаршин",
     9: "Ф. Достоевский",
 }
-
-
-def confident_predict(proba: np.ndarray, threshold: float = 0.4) -> int:
-    if np.max(proba) >= threshold:
-        return np.argmax(proba)
-    return -1
