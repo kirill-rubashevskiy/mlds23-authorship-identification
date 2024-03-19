@@ -9,28 +9,18 @@ from app.database import SessionLocal
 from mlds23_authorship_identification.utils import label2name
 
 
-def load_model(model_name: str, remote, access_key_id, secret_access_key) -> Any:
+def load_model(model_name: str) -> Any:
     """
     Function loads DVC-tracked ML-model from remote S3.
 
     :param model_name: model name
-    :param remote: DVC remote S3 name
-    :param access_key_id: S3 access key id
-    :param secret_access_key: S3 secret access key
     :return: model
     """
     with open(
         path=f"models/{model_name}",
         repo="https://github.com/kirill-rubashevskiy/mlds23-authorship-identification/",
         mode="rb",
-        config={
-            "remote": {
-                remote: {
-                    "access_key_id": access_key_id,
-                    "secret_access_key": secret_access_key,
-                }
-            }
-        },
+        remote="yandexcloudhttp",
     ) as f:
         model = load(f)
     return model

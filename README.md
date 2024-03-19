@@ -5,8 +5,6 @@
 Создать ML-сервис для определения авторства текстов на основании фрагмента из
 5-10 предложений.
 
-**Update (01.03.23)**: рабочий MVP доступен по ссылке https://t.me/mlds23_ai_bot
-
 ## Состав команды
 
 - [Дарья Мишина](https://github.com/DariaMishina)
@@ -14,7 +12,133 @@
 - [Дмитрий Шильцов](https://github.com/DmitriyShiltsov)
 - [Елена Вольф](https://github.com/Graf-D) (куратор)
 
-## Предварительный план работы
+## Работа с сервисом
+
+Сервис развернут на render.com и состоит из:
+
+- [FastAPI приложения с обученной ML-моделью](https://mlds23-authorship-identification-app.onrender.com)
+  ([документация](https://mlds23-authorship-identification-app.onrender.com/docs)
+  по работе с ним) и
+- [Telegram бота](https://t.me/mlds23_ai_bot) (подсказку по его работе можно
+  получить в стартовом меню)
+
+## Инструкция для локального запуска сервиса
+
+<details>
+
+<summary>для запуска FastAPI приложения</summary>
+
+1. Клонировать репозитарий:
+
+```bash
+git clone https://github.com/kirill-rubashevskiy/mlds23-authorship-identification.git
+```
+
+2. Установить [Docker](https://docs.docker.com/get-docker/),
+   [PostgreSQL](https://www.postgresql.org/download/) и
+   [Redis](https://redis.io/docs/install/install-redis/)
+3. Поднять PostgreSQL и создать базу данных и пользователя с паролем для работы
+   с ней (можно использовать свои название базы данных, имя пользователя и
+   пароль):
+
+```postgresql
+CREATE DATABASE db_name;
+CREATE USER db_user WITH PASSWORD 'db_password';
+GRANT ALL PRIVILEGES ON DATABASE db_name TO db_user;
+```
+
+4. Создавать Docker-образ приложения, создать и запустить Docker-контейнер
+   (команда запускается в корневой папке проекта):
+
+```bash
+# значения переменных DB_NAME, DB_PASSWORD и DB_USER берем из шага 2
+# при изменении порта APP_PORT необходимо также поменять «левый» порт в port mapping (флаг -p)
+docker build -f app/Dockerfile -t app . && \
+docker run \
+--env APP_PORT=8000 \
+--env DB_HOST=host.docker.internal \
+--env DB_NAME=db_name \
+--env DB_PASSWORD=db_password \
+--env DB_PORT=5432 \
+--env DB_USER=db_user \
+--env REDIS_HOST=host.docker.internal \
+--name app \
+-p 8000:8000 \
+app
+```
+
+FastAPI приложение будет доступно по адресу: http://0.0.0.0:8000
+
+</details>
+
+<details>
+
+<summary>для запуска FastAPI приложения вместе с Telegram ботом </summary>
+
+1. Клонировать репозитарий:
+
+```bash
+git clone https://github.com/kirill-rubashevskiy/mlds23-authorship-identification.git
+```
+
+2. Установить [Docker](https://docs.docker.com/get-docker/),
+   [PostgreSQL](https://www.postgresql.org/download/),
+   [Redis](https://redis.io/docs/install/install-redis/) и
+   [ngrok](https://ngrok.com/download)
+
+3. Поднять PostgreSQL и создать базу данных и пользователя с паролем для работы
+   с ней (можно использовать свои название базы данных, имя пользователя и
+   пароль):
+
+```postgresql
+CREATE DATABASE db_name;
+CREATE USER db_user WITH PASSWORD 'db_password';
+GRANT ALL PRIVILEGES ON DATABASE db_name TO db_user;
+```
+
+4. Создать бота в Telegram при помощи [BotFather](https://telegram.me/BotFather)
+   (при создании будет сгенерирован токен)
+
+5. Создать HTTPS endpoint для бота при помощи ngrok:
+
+```bash
+# порт для бота можно выбрать по своему усмотрению
+ngrok http 8080 # порт для бота может быть любым
+```
+
+6. создать в корневой папке репозитария файл `.env` со следующими переменными
+   окружения:
+
+```dosini
+# пример .env
+APP_PORT=8000 # порт для FastAPI приложения, можно выбрать по своему усмотрению
+DB_USER=db_user # имя пользователя из шага 3
+DB_PASSWORD=db_password # пароль пользователя из шага 3
+DB_HOST=host.docker.internal
+DB_PORT=5432
+DB_NAME=db_name # название базы данных из шага 3
+REDIS_HOST=host.docker.internal
+TOKEN=token # заменить на токен из шага 4
+BASE_WEBHOOK_URL=base_webhook_url # заменить на forwarding URL из лога терминала после выполнения шага 5
+APP_URL=http://app:8000/ # порт для FastAPI приложения
+BOT_PORT=8080 # порт из шага 5
+```
+
+7. Создавать Docker-образы приложения и бота, создать и запустить
+   Docker-контейнеры (команда запускается в корневой папке проекта):
+
+```bash
+docker compose up -d
+```
+
+FastAPI приложение будет доступно по адресу: http://0.0.0.0:8000 \
+Бот будет доступен в Telegram по имени, выбранному на шаге 4
+
+</details>
+
+## Работа над проектом
+
+### Предварительный план работы
 
 1. Сбор данных (до 31 октября 2023 года)
 2. Разведочный анализ данных (до 15 ноября 2023 года)
@@ -22,7 +146,7 @@
 4. DL-эксперименты (срок TBA)
 5. Доработка MVP в полноценный сервис и deployment (срок TBA)
 
-## Сбор данных
+### Сбор данных
 
 На данном этапе мы:
 
@@ -60,7 +184,7 @@
 
 </details>
 
-## Разведочный анализ данных
+### Разведочный анализ данных
 
 На данном этапе мы:
 
@@ -72,7 +196,7 @@
 <details>
   <summary><b>Подробнее</b></summary>
 
-### Статистики из текстов
+#### Статистики из текстов
 
 ([ноутбук](notebooks/05_eda_dm_stats_ngrams.ipynb) с анализом статистик из
 текстов и нграмм, [ноутбук](notebooks/05_eda_shiltsov_punct_grams.ipynb) с
@@ -118,7 +242,7 @@
 На следующем этапе мы попробуем использовать эти статистики в качестве признаков
 для классификации.
 
-### Нграммы
+#### Нграммы
 
 ([ноутбук](./EDA/EDA_DM.ipynb) с анализом статистик из текстов и нграмм)
 
@@ -136,7 +260,7 @@
 ![top_10_bigrams](visualizations/top_10_bigrams.png)
 ![top_10_trigrams](visualizations/top_10_trigrams.png)
 
-### Анализ частей речи
+#### Анализ частей речи
 
 ([ноутбук](notebooks/05_eda_kr_pos_topic_modeling.ipynb) с анализом частей речи
 и тематическим моделированием,
@@ -202,7 +326,7 @@
 употребления частей речи, возможно это может дать полезные дополнительные
 признаки для обучения моделей.**
 
-### Тематическое моделирование
+#### Тематическое моделирование
 
 ([ноутбук](notebooks/05_eda_kr_pos_topic_modeling.ipynb) с анализом частей речи
 и тематическим моделированием)
@@ -251,7 +375,7 @@
 
 </details>
 
-## ML-эксперименты и создание MVP
+### ML-эксперименты и создание MVP
 
 На данном этапе мы:
 
@@ -263,7 +387,7 @@
 
 MVP развернут на render.com и доступен по ссылке https://t.me/mlds23_ai_bot
 
-## DL-эксперименты
+### DL-эксперименты
 
 На данном этапе планируется:
 
@@ -271,6 +395,6 @@ MVP развернут на render.com и доступен по ссылке htt
 - дообучить LLM-модель (Llama, Mistral, Saiga)
 - обучить классические ML-модели на эмбеддингах из DL-модели
 
-## Доработка MVP в полноценный сервис и deployment
+### Доработка MVP в полноценный сервис и deployment
 
 На данном этапе планируется доработать MVP в полноценный веб сервис
