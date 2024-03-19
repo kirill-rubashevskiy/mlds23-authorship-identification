@@ -28,7 +28,7 @@ async def predict_text(message: Message, state: FSMContext, app_url: str, **kwar
     if text:
         logging.info("Пользователь ввел текст")
         requests.patch(f"{app_url}users/{user_id}/requests")
-        response = requests.post(f"{app_url}items/predict/{text}")
+        response = requests.post(f"{app_url}items/predict_text", json={"text": text})
         if response.status_code == 200:
             data = response.json()
             if data["label"] != -1:
