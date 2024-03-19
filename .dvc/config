@@ -4,3 +4,5 @@
     url = s3://mlds23-authorship-identification/dvc
     endpointurl = https://storage.yandexcloud.net/
     region = ru-central1
+['remote "yandexcloudhttp"']
+    url = https://storage.yandexcloud.net/mlds23-authorship-identification/dvc
