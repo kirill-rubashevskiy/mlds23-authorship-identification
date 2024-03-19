@@ -86,27 +86,28 @@ class TextStatsExtractor(BaseEstimator, TransformerMixin):
     def _extract_pos_stats(self, word_tokens: list[str]) -> dict:
         pos_stats = dict().fromkeys(self.pos_stats_list, 0)
         pos_count = dict.fromkeys(self.pos_tags_list, 0)
-        _, tags = zip(*self.pos_tagger(word_tokens), strict=True)
-        for tag in tags:
-            tag = tag.split("=")[0]
-            if tag in pos_count:
-                pos_count[tag] += 1
-        if pos_count["S"] and pos_count["V"]:
-            pos_stats["noun2verb"] = pos_count["S"] / pos_count["V"]
-        if pos_count["A"] and pos_count["S"]:
-            pos_stats["adj2noun"] = pos_count["A"] / pos_count["S"]
-        if pos_count["ADV"] and pos_count["V"]:
-            pos_stats["adv2verb"] = pos_count["ADV"] / pos_count["V"]
-        if pos_count["PR"] and pos_count["S"]:
-            pos_stats["pr2noun"] = pos_count["PR"] / pos_count["S"]
-        if pos_count["CONJ"] and pos_count["S"]:
-            pos_stats["conj2noun"] = pos_count["CONJ"] / pos_count["S"]
-        if (pos_count["S-PRO"] or pos_count["A-PRO"]) and pos_count["S"]:
-            pos_stats["pron2noun"] = (
-                pos_count["S-PRO"] + pos_count["A-PRO"]
-            ) / pos_count["S"]
-        if pos_count["V"]:
-            pos_stats["verb2word"] = pos_count["V"] / len(word_tokens)
+        if word_tokens:
+            _, tags = zip(*self.pos_tagger(word_tokens), strict=True)
+            for tag in tags:
+                tag = tag.split("=")[0]
+                if tag in pos_count:
+                    pos_count[tag] += 1
+            if pos_count["S"] and pos_count["V"]:
+                pos_stats["noun2verb"] = pos_count["S"] / pos_count["V"]
+            if pos_count["A"] and pos_count["S"]:
+                pos_stats["adj2noun"] = pos_count["A"] / pos_count["S"]
+            if pos_count["ADV"] and pos_count["V"]:
+                pos_stats["adv2verb"] = pos_count["ADV"] / pos_count["V"]
+            if pos_count["PR"] and pos_count["S"]:
+                pos_stats["pr2noun"] = pos_count["PR"] / pos_count["S"]
+            if pos_count["CONJ"] and pos_count["S"]:
+                pos_stats["conj2noun"] = pos_count["CONJ"] / pos_count["S"]
+            if (pos_count["S-PRO"] or pos_count["A-PRO"]) and pos_count["S"]:
+                pos_stats["pron2noun"] = (
+                    pos_count["S-PRO"] + pos_count["A-PRO"]
+                ) / pos_count["S"]
+            if pos_count["V"]:
+                pos_stats["verb2word"] = pos_count["V"] / len(word_tokens)
         return pos_stats
 
     def _extract_text_stats(self, text: str) -> dict:
@@ -124,6 +125,8 @@ class TextStatsExtractor(BaseEstimator, TransformerMixin):
             text_stats.update(**self._extract_pos_stats(word_tokens))
         if punct_tokens and word_tokens:
             text_stats["punct2word"] = len(punct_tokens) / len(word_tokens)
+        else:
+            text_stats["punct2word"] = 0
         return text_stats
 
     def fit(self, X, y=None):
