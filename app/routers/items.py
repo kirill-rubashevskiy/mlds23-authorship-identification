@@ -5,22 +5,22 @@ import pandas as pd
 from fastapi import APIRouter, Request, UploadFile
 from fastapi.responses import StreamingResponse
 
-from app.schemas import Prediction
+from app.schemas import Prediction, Text
 
 
 router = APIRouter(prefix="/items", tags=["items"])
 
 
-@router.post("/predict/{text}", response_model=Prediction)
-def predict_text(text: str, request: Request):
+@router.post("/predict_text", response_model=Prediction)
+def predict_text(text: Text, request: Request):
     """
     Function predicts author of the text.
 
-    :param text: text
+    :param text: Text
     :param request: request to access app state
     :return: predicted label and corresponding author name
     """
-    df = pd.Series(text)
+    df = pd.Series(text.text)
     label, name = request.app.state.model.predict(df, return_names=True).flatten()
     logging.info("Model made prediction")
     response = Prediction(label=label, name=name)
