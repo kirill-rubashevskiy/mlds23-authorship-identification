@@ -6,8 +6,6 @@ services:
       dockerfile: ./bot/Dockerfile
     depends_on:
       - app
-    volumes:
-      - ./:/code:ro
     ports:
       - "${BOT_PORT}:${BOT_PORT}"
     env_file:
@@ -16,8 +14,6 @@ services:
     build:
       context: .
       dockerfile: ./app/Dockerfile
-    volumes:
-      - ./:/code:ro
     ports:
       - "${APP_PORT}:${APP_PORT}"
     env_file:
