@@ -12,6 +12,10 @@ class Stats(BaseModel):
     avg_rating: int | float
 
 
+class Text(BaseModel):
+    text: str
+
+
 class UserCreate(BaseModel):
     id: int
 

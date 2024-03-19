@@ -19,7 +19,7 @@ from app.routers import items, users
 @asynccontextmanager
 async def lifespan(app: FastAPI, cfg: DictConfig):
     # load DVC-tracked model from s3
-    app.state.model = Model(model_name=cfg.app.model_name, **cfg.dvc)
+    app.state.model = Model(model_name=cfg.app.model_name)
     logging.info("Model loaded")
 
     # initialize Redis cache
