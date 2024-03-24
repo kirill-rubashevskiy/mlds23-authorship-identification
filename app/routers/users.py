@@ -4,7 +4,7 @@ from fastapi_cache.decorator import cache
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
-from app.dependencies import get_db
+from app.dependencies import get_db, my_key_builder
 
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -49,7 +49,7 @@ def update_user_rating(user_id: int, rating: int, db: Session = Depends(get_db))
 
 
 @router.get("/stats", response_model=schemas.Stats)
-@cache(expire=30)
+@cache(expire=30, key_builder=my_key_builder)
 def get_stats(db: Session = Depends(get_db)):
     """
     Function returns bot usage statistics.
