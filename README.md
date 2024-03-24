@@ -22,49 +22,34 @@
 - [Telegram бота](https://t.me/mlds23_ai_bot) (подсказку по его работе можно
   получить в стартовом меню)
 
+<details>
+
+<summary>примеры работы Telegram бота</summary>
+
+![alt-text-1](https://media.giphy.com/media/kA4fbEX9bCG2wdVsro/giphy.gif)
+![alt-text-2](https://media.giphy.com/media/VxmsJTajDswKKa6Ixj/giphy.gif)
+
+</details>
+
 ## Инструкция для локального запуска сервиса
 
 <details>
 
 <summary>для запуска FastAPI приложения</summary>
 
-1. Клонировать репозитарий:
+1. Установить [Docker](https://docs.docker.com/get-docker/)
+
+2. Клонировать репозитарий:
 
 ```bash
 git clone https://github.com/kirill-rubashevskiy/mlds23-authorship-identification.git
 ```
 
-2. Установить [Docker](https://docs.docker.com/get-docker/),
-   [PostgreSQL](https://www.postgresql.org/download/) и
-   [Redis](https://redis.io/docs/install/install-redis/)
-3. Поднять PostgreSQL и создать базу данных и пользователя с паролем для работы
-   с ней (можно использовать свои название базы данных, имя пользователя и
-   пароль):
-
-```postgresql
-CREATE DATABASE db_name;
-CREATE USER db_user WITH PASSWORD 'db_password';
-GRANT ALL PRIVILEGES ON DATABASE db_name TO db_user;
-```
-
-4. Создавать Docker-образ приложения, создать и запустить Docker-контейнер
-   (команда запускается в корневой папке проекта):
+3. В корневой папке репозитария выполнить команду:
 
 ```bash
-# значения переменных DB_NAME, DB_PASSWORD и DB_USER берем из шага 2
-# при изменении порта APP_PORT необходимо также поменять «левый» порт в port mapping (флаг -p)
-docker build -f app/Dockerfile -t app . && \
-docker run \
---env APP_PORT=8000 \
---env DB_HOST=host.docker.internal \
---env DB_NAME=db_name \
---env DB_PASSWORD=db_password \
---env DB_PORT=5432 \
---env DB_USER=db_user \
---env REDIS_HOST=host.docker.internal \
---name app \
--p 8000:8000 \
-app
+# команда создает и запускает Docker-контейнеры сервиса
+docker compose -f production.yaml --profile app up
 ```
 
 FastAPI приложение будет доступно по адресу: http://0.0.0.0:8000
@@ -75,64 +60,41 @@ FastAPI приложение будет доступно по адресу: http
 
 <summary>для запуска FastAPI приложения вместе с Telegram ботом </summary>
 
-1. Клонировать репозитарий:
+1. [Зарегистрироваться](https://ngrok.com/signup) в ngrok и получить в личном
+   кабинете:
+
+- `Authtoken` (вкладка Your Authtoken) и
+- `static domain` (вкладка Your Domains, выглядит как
+  domain-name.ngrok-free.app)
+
+2. Создать бота в Telegram при помощи [BotFather](https://telegram.me/BotFather)
+   (при создании будет сгенерирован токен)
+
+3. Клонировать репозитарий:
 
 ```bash
 git clone https://github.com/kirill-rubashevskiy/mlds23-authorship-identification.git
 ```
 
-2. Установить [Docker](https://docs.docker.com/get-docker/),
-   [PostgreSQL](https://www.postgresql.org/download/),
-   [Redis](https://redis.io/docs/install/install-redis/) и
-   [ngrok](https://ngrok.com/download)
-
-3. Поднять PostgreSQL и создать базу данных и пользователя с паролем для работы
-   с ней (можно использовать свои название базы данных, имя пользователя и
-   пароль):
-
-```postgresql
-CREATE DATABASE db_name;
-CREATE USER db_user WITH PASSWORD 'db_password';
-GRANT ALL PRIVILEGES ON DATABASE db_name TO db_user;
-```
-
-4. Создать бота в Telegram при помощи [BotFather](https://telegram.me/BotFather)
-   (при создании будет сгенерирован токен)
-
-5. Создать HTTPS endpoint для бота при помощи ngrok:
-
-```bash
-# порт для бота можно выбрать по своему усмотрению
-ngrok http 8080 # порт для бота может быть любым
-```
-
-6. создать в корневой папке репозитария файл `.env` со следующими переменными
+4. В корневой папке репозитария создать файл `.env` со следующими переменными
    окружения:
 
 ```dosini
 # пример .env
-APP_PORT=8000 # порт для FastAPI приложения, можно выбрать по своему усмотрению
-DB_USER=db_user # имя пользователя из шага 3
-DB_PASSWORD=db_password # пароль пользователя из шага 3
-DB_HOST=host.docker.internal
-DB_PORT=5432
-DB_NAME=db_name # название базы данных из шага 3
-REDIS_HOST=host.docker.internal
-TOKEN=token # заменить на токен из шага 4
-BASE_WEBHOOK_URL=base_webhook_url # заменить на forwarding URL из лога терминала после выполнения шага 5
-APP_URL=http://app:8000/ # порт для FastAPI приложения
-BOT_PORT=8080 # порт из шага 5
+BASE_WEBHOOK_URL=base_webhook_url # заменить значение на static domain из шага 1
+NGROK_TOKEN=ngrok_token # заменить значение на Authtoken из шага 1
+BOT_TOKEN=bot_token # заменить значение  на токен из шага 2
 ```
 
-7. Создавать Docker-образы приложения и бота, создать и запустить
-   Docker-контейнеры (команда запускается в корневой папке проекта):
+5. В корневой папке репозитария выполнить команду:
 
 ```bash
-docker compose up -d
+# команда создает и запускает Docker-контейнеры сервиса
+docker compose -f production.yaml --profile full up
 ```
 
 FastAPI приложение будет доступно по адресу: http://0.0.0.0:8000 \
-Бот будет доступен в Telegram по имени, выбранному на шаге 4
+Бот будет доступен в Telegram по имени, выбранному для бота на шаге 2
 
 </details>
 
