@@ -1,147 +1,236 @@
 from io import StringIO
-from unittest.mock import MagicMock, create_autospec, patch
+from unittest.mock import create_autospec, patch
 
-import pandas as pd
 import pytest
-from aiogram import Bot, Dispatcher
+import requests
+import responses
+from aiogram import Bot, Dispatcher, F
 from aiogram.filters.command import Command
 from aiogram_tests import MockedBot
-from aiogram_tests.handler import MessageHandler
-from aiogram_tests.types.dataset import MESSAGE, MESSAGE_WITH_DOCUMENT
-
-from bot.handlers import (
-    cmd_help,
-    cmd_predict_item,
-    cmd_predict_items,
-    cmd_rate,
-    cmd_start,
-    cmd_stats,
-    rate_callback,
+from aiogram_tests.handler import CallbackQueryHandler, MessageHandler
+from aiogram_tests.types.dataset import (
+    CALLBACK_QUERY,
+    MESSAGE,
+    MESSAGE_WITH_DOCUMENT,
+    USER,
 )
 
-
-# create mock estimator instead of loading ML fitted model from s3
-mock_estimator = MagicMock(
-    predict_item=MagicMock(return_value="Кажется, этот фрагмент написал А. Пушкин"),
-    predict_items=MagicMock(
-        return_value=pd.Series(data=["А. Куприн"] * 4, name="predictions.csv")
-    ),
-)
+from bot.routers.items import enter_text, predict_text, predict_texts, upload_file
+from bot.routers.users import cmd_start, get_help, get_stats, rate, rated
+from bot.states import PredictText, PredictTexts
 
 
-# create mock Bot.download method that returns mock test .csv file to emulate bot downloading test file sent by user
-# from Telegram servers
-mock_download = create_autospec(
-    Bot.download,
-    side_effect=[StringIO("text\ntext 1\ntext 2\ntext 3\ntext 4") for _ in range(2)],
-)
+mock_app_url = "http://app_url/"
 
 
-@pytest.mark.asyncio
-async def test_cmd_start_handler():
-    requester = MockedBot(
-        MessageHandler(cmd_start, Command("start"), dp=Dispatcher(users=set()))
+class TestUsers:
+
+    @pytest.fixture
+    def mock_stats(self):
+        return {"total_users": 3, "total_requests": 19, "avg_rating": 5.0}
+
+    @pytest.mark.parametrize("status", [200, 400])
+    @pytest.mark.asyncio
+    @responses.activate
+    async def test_cmd_start_success(self, status):
+        responses.get(url=mock_app_url, status=200)
+        responses.post(url=f"{mock_app_url}users/", status=status)
+        requester = MockedBot(
+            MessageHandler(
+                cmd_start, Command("start"), dp=Dispatcher(app_url=mock_app_url)
+            )
+        )
+        calls = await requester.query(MESSAGE.as_object(text="/start"))
+        reply_message = calls.send_message.fetchone()
+        assert reply_message.text == (
+            "Привет! Я — бот для определения авторства текстов.\n"
+            "Я могу определить, кто из русских классиков написал тот или иной текст"
+        )
+        assert "inline_keyboard" in reply_message.reply_markup
+
+    @pytest.mark.asyncio
+    @responses.activate
+    async def test_cmd_start_app_down(self):
+        responses.get(url=mock_app_url, body=requests.ConnectionError())
+        requester = MockedBot(
+            MessageHandler(
+                cmd_start, Command("start"), dp=Dispatcher(app_url=mock_app_url)
+            )
+        )
+        calls = await requester.query(MESSAGE.as_object(text="/start"))
+        reply_message = calls.send_message.fetchone()
+        assert (
+            reply_message.text
+            == "К сожалению, сервис сейчас недоступен, попробуйте попозже"
+        )
+
+    @pytest.mark.asyncio
+    @responses.activate
+    async def test_get_stats(self, mock_stats):
+        responses.get(url=f"{mock_app_url}users/stats", status=200, json=mock_stats)
+        request_handler = CallbackQueryHandler(
+            get_stats, F.data == "stats", dp=Dispatcher(app_url=mock_app_url)
+        )
+        requester = MockedBot(request_handler)
+        callback_query = CALLBACK_QUERY.as_object(
+            data="stats", message=MESSAGE.as_object()
+        )
+
+        calls = await requester.query(callback_query)
+        replies = calls.send_message.fetchall()
+        assert replies[0].text == (
+            f"За время работы бота {mock_stats['total_users']} пользователя(ей) воспользовались им "
+            f"{mock_stats['total_requests']} раз\n"
+            f"Средняя оценка бота пользователями: {mock_stats['avg_rating']}"
+        )
+        assert replies[1].text == "Я могу еще чем-то помочь?"
+
+    @pytest.mark.asyncio
+    async def test_get_help(self):
+        request_handler = CallbackQueryHandler(get_help, F.data == "help")
+        requester = MockedBot(request_handler)
+        callback_query = CALLBACK_QUERY.as_object(
+            data="help", message=MESSAGE.as_object()
+        )
+
+        calls = await requester.query(callback_query)
+        replies = calls.send_message.fetchall()
+        assert replies[0].text == (
+            "Для определения автора текста достаточно отправить сам текст\n"
+            "Для определения авторов нескольких текстов необходимо отправить csv-файл с одной колонкой-текстами"
+        )
+        assert replies[1].text == "Я могу еще чем-то помочь?"
+
+    @pytest.mark.asyncio
+    async def test_rate(self):
+        request_handler = CallbackQueryHandler(
+            rate,
+            F.data == "rate",
+        )
+        requester = MockedBot(request_handler)
+        callback_query = CALLBACK_QUERY.as_object(
+            data="rate", message=MESSAGE.as_object()
+        )
+
+        calls = await requester.query(callback_query)
+        reply = calls.send_message.fetchone()
+        assert reply.text == "Оцени работу бота"
+        assert "inline_keyboard" in reply.reply_markup
+
+    @pytest.mark.asyncio
+    @responses.activate
+    async def test_rated(self):
+        responses.patch(
+            url=f"{mock_app_url}users/{USER.get('id')}/5",
+            status=200,
+        )
+        request_handler = CallbackQueryHandler(
+            rated, F.data.startswith("rated_"), dp=Dispatcher(app_url=mock_app_url)
+        )
+        requester = MockedBot(request_handler)
+        callback_query = CALLBACK_QUERY.as_object(
+            data="rated_5", message=MESSAGE.as_object()
+        )
+
+        calls = await requester.query(callback_query)
+        replies = calls.send_message.fetchall()
+        assert replies[0].text == "Спасибо, что оценил работу бота"
+        assert replies[1].text == "Я могу еще чем-то помочь?"
+
+
+class TestItems:
+
+    mock_download = create_autospec(
+        Bot.download, return_value=StringIO("text\ntext 1\ntext 2")
     )
-    calls = await requester.query(MESSAGE.as_object(text="/start"))
-    reply_message = calls.send_message.fetchone().text
-    assert dict(MESSAGE)["from"]["id"] in requester._handler.dp["users"]
-    assert reply_message == (
-        "Привет! Это бот для определения авторства текстов.\nЯ могу определить, кто из русских "
-        "классиков написал один или несколько фрагментов.\nДля получения подсказок по моей "
-        "работе можно отправить /help"
+
+    @pytest.fixture
+    def mock_predictions(self):
+        return "text,author\ntext 1,А. Пушкин\ntext 2,И. Тургенев"
+
+    @pytest.mark.asyncio
+    async def test_enter_text(self):
+        request_handler = CallbackQueryHandler(
+            enter_text,
+            F.data == "predict_text",
+        )
+        requester = MockedBot(request_handler)
+        callback_query = CALLBACK_QUERY.as_object(
+            data="predict_text", message=MESSAGE.as_object()
+        )
+
+        calls = await requester.query(callback_query)
+        reply = calls.send_message.fetchone()
+        assert reply.text == "Введи текст, автора которого нужно определить"
+
+    @pytest.mark.parametrize(
+        "label,name,expected",
+        [
+            (-1, "не могу определить автора", "Я не могу определить автора этого текста"),
+            (0, "А. Пушкин", "Возможно, этот текст написал А. Пушкин"),
+        ],
     )
+    @pytest.mark.asyncio
+    @responses.activate
+    async def test_predict_text(self, label, name, expected):
+        responses.patch(
+            url=f"{mock_app_url}users/{USER.get('id')}/requests",
+            status=200,
+        )
+        responses.post(
+            url=f"{mock_app_url}items/predict_text",
+            status=200,
+            json={"label": label, "name": name},
+        )
+        request_handler = MessageHandler(
+            predict_text,
+            state=PredictText.entering_text,
+            dp=Dispatcher(app_url=mock_app_url),
+        )
 
+        requester = MockedBot(request_handler)
+        calls = await requester.query(MESSAGE.as_object())
+        replies = calls.send_message.fetchall()
+        assert replies[0].text == expected
+        assert replies[1].text == "Я могу еще чем-то помочь?"
 
-@pytest.mark.asyncio
-async def test_cmd_help_handler():
-    requester = MockedBot(MessageHandler(cmd_help, Command("help")))
-    calls = await requester.query(MESSAGE.as_object(text="/help"))
-    reply_message = calls.send_message.fetchone().text
-    assert reply_message == (
-        "Бот поддерживает следующие режимы/команды:\n- /help — получить подсказки по работе "
-        "бота\n- /predict_item — отправить фрагмент текста и получить предсказание об авторе "
-        'фрагмента\n- /predict_items — отправить csv-файл, в котором есть столбец "text" c '
-        "фрагментами текстов, и получить csv-файл с предсказаниями по каждому фрагменту\n- /rate "
-        "— оценить работу бота\n- /start — запустить бота\n- /stats — получить статистику работы "
-        "бота"
-    )
+    @pytest.mark.asyncio
+    async def test_upload_file(self):
+        request_handler = CallbackQueryHandler(
+            upload_file,
+            F.data == "predict_texts",
+        )
+        requester = MockedBot(request_handler)
+        callback_query = CALLBACK_QUERY.as_object(
+            data="predict_texts", message=MESSAGE.as_object()
+        )
 
+        calls = await requester.query(callback_query)
+        reply = calls.send_message.fetchone()
+        assert reply.text == "Загрузи csv-файл c текстами"
 
-@pytest.mark.asyncio
-async def test_cmd_rate_handler():
-    request_handler = MessageHandler(cmd_rate, Command("rate"))
-    requester = MockedBot(request_handler)
-    calls = await requester.query(MESSAGE.as_object(text="/rate"))
-    answer_message = calls.send_message.fetchone()
-    assert answer_message.text == "Оцените работу бота:"
-    assert "keyboard" in answer_message.reply_markup
-
-
-@pytest.mark.asyncio
-async def test_rate_callback_handler():
-    request_handler = MessageHandler(rate_callback, dp=Dispatcher(ratings=[0, 0]))
-    requester = MockedBot(request_handler)
-    calls = await requester.query(MESSAGE.as_object(text="5"))
-    reply_message = calls.send_message.fetchone().text
-    assert reply_message == "Спасибо, что оценили работу бота!"
-    assert requester._handler.dp["ratings"] == [5, 1]
-
-
-@pytest.mark.asyncio
-async def test_cmd_predict_item_handler():
-    request_handler = MessageHandler(
-        cmd_predict_item,
-        Command("predict_item"),
-        dp=Dispatcher(estimator=mock_estimator, requests=[0]),
-    )
-    requester = MockedBot(request_handler)
-    calls = await requester.query(MESSAGE.as_object(text="/predict_item"))
-    reply_message = calls.send_message.fetchone().text
-    assert reply_message == "Кажется, этот фрагмент написал А. Пушкин"
-    assert requester._handler.dp["requests"][0] == 1
-
-
-@patch.object(Bot, "download", mock_download, create=True)
-@pytest.mark.asyncio
-async def test_cmd_predict_items_handler():
-    request_handler = MessageHandler(
-        cmd_predict_items,
-        Command("predict_items"),
-        dp=Dispatcher(estimator=mock_estimator, requests=[0]),
-    )
-    requester = MockedBot(request_handler)
-    calls = await requester.query(MESSAGE_WITH_DOCUMENT.as_object(text="/predict_items"))
-    reply_document = calls.send_document.fetchone()
-    assert reply_document.document.filename == "predictions.csv"
-    assert requester._handler.dp["requests"][0] == 1
-
-
-@pytest.mark.parametrize(
-    "users,requests,ratings,expected",
-    [
-        (
-            set(),
-            [0],
-            [0, 0],
-            "За время работы бота 0 юзер(а/ов) использовали его 0 раз(а)",
-        ),
-        (
-            {12345, 67890},
-            [4],
-            [9, 2],
-            "За время работы бота 2 юзер(а/ов) использовали его 4 раз(а)\nСредняя оценка "
-            "работы бота — 4.5",
-        ),
-    ],
-)
-@pytest.mark.asyncio
-async def test_cmd_stats_handler(users, requests, ratings, expected):
-    request_handler = MessageHandler(
-        cmd_stats,
-        Command("stats"),
-        dp=Dispatcher(users=users, requests=requests, ratings=ratings),
-    )
-    requester = MockedBot(request_handler)
-    calls = await requester.query(MESSAGE.as_object(text="/stats"))
-    reply_message = calls.send_message.fetchone().text
-    assert reply_message == expected
+    @patch.object(Bot, "download", mock_download, create=True)
+    @pytest.mark.asyncio
+    @responses.activate
+    async def test_predict_texts(self, mock_predictions):
+        responses.patch(
+            url=f"{mock_app_url}users/{USER.get('id')}/requests",
+            status=200,
+        )
+        responses.post(
+            url=f"{mock_app_url}items/predict_texts",
+            status=200,
+            body=mock_predictions,
+            content_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=predictions.csv"},
+        )
+        request_handler = MessageHandler(
+            predict_texts,
+            F.document,
+            state=PredictTexts.uploading_file,
+            dp=Dispatcher(app_url=mock_app_url),
+        )
+        requester = MockedBot(request_handler)
+        calls = await requester.query(MESSAGE_WITH_DOCUMENT.as_object())
+        reply = calls.send_document.fetchone()
+        assert reply.document.filename == "predictions.csv"
