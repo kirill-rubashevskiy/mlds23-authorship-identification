@@ -1,0 +1,12 @@
+version: "3"
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: ./bot/Dockerfile
+    image: kirillrubashevskiy/mlds23-authorship-identification:bot-latest
+  app:
+    build:
+      context: .
+      dockerfile: ./app/Dockerfile
+    image: kirillrubashevskiy/mlds23-authorship-identification:app-latest
