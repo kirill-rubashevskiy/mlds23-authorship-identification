@@ -28,36 +28,6 @@ class TextStatsExtractor(BaseEstimator, TransformerMixin):
             ), "At least one variable should be True"
         except Exception as e:
             print(f"AssertionError: {e}")
-        if sent_stats:
-            self.sent_stats_list = [
-                "...",
-                ".",
-                ",",
-                "—",
-                "?",
-                "«",
-                ":",
-                "!",
-                ";",
-                "avg_snt_len",
-            ]
-            self.punct_tokenizer = nltk.RegexpTokenizer(r"(?:\.{3})|[.,—?«:!;]")
-        if self.tkn_stats or self.pos_stats:
-            self.word_tokenizer = nltk.RegexpTokenizer(r"[А-яЁё]+")
-        if self.tkn_stats:
-            self.tkn_stats_list = ["avg_tkn_len", "ttr"]
-        if self.pos_stats:
-            self.pos_tagger = partial(pos_tag, lang="rus")
-            self.pos_tags_list = ["V", "S", "A", "ADV", "PR", "CONJ", "S-PRO", "A-PRO"]
-            self.pos_stats_list = [
-                "noun2verb",
-                "adj2noun",
-                "adv2verb",
-                "pr2noun",
-                "conj2noun",
-                "pron2noun",
-                "verb2word",
-            ]
 
     def _tokenize(self, text: str, tokenizer: nltk.RegexpTokenizer) -> list[str]:
         tokens = tokenizer.tokenize(text.lower())
@@ -130,6 +100,36 @@ class TextStatsExtractor(BaseEstimator, TransformerMixin):
         return text_stats
 
     def fit(self, X, y=None):
+        if self.sent_stats:
+            self.sent_stats_list = [
+                "...",
+                ".",
+                ",",
+                "—",
+                "?",
+                "«",
+                ":",
+                "!",
+                ";",
+                "avg_snt_len",
+            ]
+            self.punct_tokenizer = nltk.RegexpTokenizer(r"(?:\.{3})|[.,—?«:!;]")
+        if self.tkn_stats or self.pos_stats:
+            self.word_tokenizer = nltk.RegexpTokenizer(r"[А-яЁё]+")
+        if self.tkn_stats:
+            self.tkn_stats_list = ["avg_tkn_len", "ttr"]
+        if self.pos_stats:
+            self.pos_tagger = partial(pos_tag, lang="rus")
+            self.pos_tags_list = ["V", "S", "A", "ADV", "PR", "CONJ", "S-PRO", "A-PRO"]
+            self.pos_stats_list = [
+                "noun2verb",
+                "adj2noun",
+                "adv2verb",
+                "pr2noun",
+                "conj2noun",
+                "pron2noun",
+                "verb2word",
+            ]
         return self
 
     def transform(self, X, y=None):

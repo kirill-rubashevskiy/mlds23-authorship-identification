@@ -1,0 +1,2 @@
+model_name: "bow_stats_poly_lr.joblib"
+port: 8000

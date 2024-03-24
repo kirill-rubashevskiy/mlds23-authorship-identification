@@ -17,7 +17,7 @@ async def on_startup(bot, url):
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
 def main(cfg: DictConfig) -> None:
     # initialize Dispatcher instance
-    dp = Dispatcher(app_url=cfg.bot.app_url)
+    dp = Dispatcher(app_url=f"http://{cfg.app.host.name}:{cfg.app.port}/")
 
     # include routers
     dp.include_routers(items.router, users.router)
@@ -26,7 +26,7 @@ def main(cfg: DictConfig) -> None:
     dp.startup.register(
         partial(
             on_startup,
-            url=f"{cfg.bot.base_webhook_url}{cfg.bot.webhook_path}/{cfg.bot.token}",
+            url=f"https://{cfg.bot.base_webhook_url}/webhook/{cfg.bot.token}",
         )
     )
 
@@ -40,7 +40,7 @@ def main(cfg: DictConfig) -> None:
     webhook_requests_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
 
     # register webhook handler on application
-    webhook_requests_handler.register(app, path=f"{cfg.bot.webhook_path}/{cfg.bot.token}")
+    webhook_requests_handler.register(app, path=f"/webhook/{cfg.bot.token}")
 
     # mount dispatcher startup and shutdown hooks to aiohttp application
     setup_application(app, dp, bot=bot)

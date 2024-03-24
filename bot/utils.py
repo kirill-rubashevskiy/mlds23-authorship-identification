@@ -14,7 +14,7 @@ def loop(func: Callable) -> Callable:
     Decorator clears user state and loops dialog with starting menu.
 
     :param func: function to decorate
-    :return: decoarted function
+    :return: decorated function
     """
 
     async def wrapper(*args, **kwargs):

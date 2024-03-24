@@ -167,8 +167,12 @@ cython_debug/
 # wandb experiments data
 **/wandb/
 
-# hydra data
+# hydra
 **/outputs/
+**/render.yaml
 
 # DVC
 .dvcignore
+
+# PostgreSQL
+db/
