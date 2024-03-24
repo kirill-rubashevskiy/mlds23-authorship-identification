@@ -14,7 +14,7 @@ router = Router()
 
 
 @router.callback_query(F.data == "predict_text")
-async def entering_text(callback: CallbackQuery, state: FSMContext):
+async def enter_text(callback: CallbackQuery, state: FSMContext):
     logging.info("Пользователь начал диалог по определению автора текста")
     await callback.message.reply(text="Введи текст, автора которого нужно определить")
     await state.set_state(PredictText.entering_text)
@@ -38,7 +38,7 @@ async def predict_text(message: Message, state: FSMContext, app_url: str, **kwar
 
 
 @router.callback_query(F.data == "predict_texts")
-async def uploading_file(callback: CallbackQuery, state: FSMContext):
+async def upload_file(callback: CallbackQuery, state: FSMContext):
     logging.info("Пользователь начал диалог по определению авторов текстов")
     await callback.message.reply(text="Загрузи csv-файл c текстами")
     await state.set_state(PredictTexts.uploading_file)
@@ -52,7 +52,7 @@ async def predict_texts(
     document_name = message.document.file_name
     document = message.document
     user_id = message.from_user.id
-    logging.info("Пользователь загрузил файн")
+    logging.info("Пользователь загрузил файл")
     requests.patch(f"{app_url}users/{user_id}/requests")
     buffer = await bot.download(document)
     files = {"file": (document_name, buffer, "text/csv")}
