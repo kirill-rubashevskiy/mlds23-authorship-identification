@@ -60,23 +60,25 @@ FastAPI приложение будет доступно по адресу: http
 
 <summary>для запуска FastAPI приложения вместе с Telegram ботом </summary>
 
-1. [Зарегистрироваться](https://ngrok.com/signup) в ngrok и получить в личном
+1. Установить [Docker](https://docs.docker.com/get-docker/)
+
+2. [Зарегистрироваться](https://ngrok.com/signup) в ngrok и получить в личном
    кабинете:
 
 - `Authtoken` (вкладка Your Authtoken) и
 - `static domain` (вкладка Your Domains, выглядит как
   domain-name.ngrok-free.app)
 
-2. Создать бота в Telegram при помощи [BotFather](https://telegram.me/BotFather)
+3. Создать бота в Telegram при помощи [BotFather](https://telegram.me/BotFather)
    (при создании будет сгенерирован токен)
 
-3. Клонировать репозитарий:
+4. Клонировать репозитарий:
 
 ```bash
 git clone https://github.com/kirill-rubashevskiy/mlds23-authorship-identification.git
 ```
 
-4. В корневой папке репозитария создать файл `.env` со следующими переменными
+5. В корневой папке репозитария создать файл `.env` со следующими переменными
    окружения:
 
 ```dosini
@@ -86,7 +88,7 @@ NGROK_TOKEN=ngrok_token # заменить значение на Authtoken из 
 BOT_TOKEN=bot_token # заменить значение  на токен из шага 2
 ```
 
-5. В корневой папке репозитария выполнить команду:
+6. В корневой папке репозитария выполнить команду:
 
 ```bash
 # команда создает и запускает Docker-контейнеры сервиса
