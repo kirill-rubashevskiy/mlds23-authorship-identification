@@ -21,5 +21,3 @@ ENV PYTHONPATH=/code
 
 RUN apt-get update && apt-get full-upgrade -y && apt-get install gcc -y
 RUN pip install wheel setuptools pip --upgrade && pip install --no-cache-dir --upgrade -r requirements.txt
-
-CMD ["python3", "bot/main.py"]

@@ -1,0 +1,66 @@
+version: "3"
+services:
+  bot:
+    image: kirillrubashevskiy/mlds23-authorship-identification:bot-latest
+    command: ["python3", "bot/main.py"]
+    depends_on:
+      app:
+        condition: service_started
+      ngrok:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    profiles:
+      - full
+  app:
+    image: kirillrubashevskiy/mlds23-authorship-identification:app-latest
+    command: ["python3", "app/main.py"]
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_started
+    ports:
+      - "8000:8000"
+    profiles:
+      - full
+      - app
+  db:
+    image: postgres:latest
+    volumes:
+      - ./db:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=ai_user
+      - POSTGRES_PASSWORD=ai_password
+      - POSTGRES_DB=ai_db
+    healthcheck:
+      test: pg_isready -U ai_user -d ai_db
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - full
+      - app
+  cache:
+    image: redis:latest
+    command: ["redis-server", "--bind", "cache", "--port", "6379"]
+    profiles:
+      - full
+      - app
+  ngrok:
+    image: ngrok/ngrok:latest
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_TOKEN}
+    healthcheck:
+      test: /bin/bash -c "</dev/tcp/localhost/4040"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command:
+      ["http", "host.docker.internal:8080", "--domain", "${BASE_WEBHOOK_URL}"]
+    ports:
+      - "4040:4040"
+    profiles:
+      - full
