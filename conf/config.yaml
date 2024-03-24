@@ -1,4 +1,8 @@
 defaults:
+  - cache: docker
+  - db: docker
+  - app/fastapi
+  - app/host: docker
   - _self_
   - override hydra/hydra_logging: disabled
   - override hydra/job_logging: disabled
@@ -6,19 +10,11 @@ hydra:
   output_subdir: null
   run:
     dir: .
-app:
-  model_name: "bow_stats_poly_lr.joblib"
-  host: "0.0.0.0"
-  port: ${oc.decode:${oc.env:APP_PORT}}
 bot:
-  token: ${oc.env:TOKEN}
+  token: ${oc.env:BOT_TOKEN}
   host: "0.0.0.0"
-  port: ${oc.decode:${oc.env:BOT_PORT}}
+  port: 8080
   base_webhook_url: ${oc.env:BASE_WEBHOOK_URL}
-  webhook_path: "/webhook"
-  app_url: ${oc.env:APP_URL}
-redis:
-  host: ${oc.env:REDIS_HOST}
 dvc:
   remote: yandexcloud
   access_key_id: ${s3.aws_access_key_id}

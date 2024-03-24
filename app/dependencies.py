@@ -3,6 +3,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from dvc.api import open
+from fastapi_cache import FastAPICache
 from joblib import load
 
 from app.database import SessionLocal
@@ -80,3 +81,9 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def my_key_builder(func, *args, **kwargs):
+    prefix = FastAPICache.get_prefix()
+    cache_key = f"{prefix}:{func.__module__}:{func.__name__}"
+    return cache_key
