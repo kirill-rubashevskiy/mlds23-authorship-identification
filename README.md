@@ -1,8 +1,11 @@
 # Определение авторства текстов
 
+_Проект студентов первого года магистратуры НИУ ВШЭ «Машинное обучение и
+высоконагруженные системы» (23/24)_
+
 ## Задача
 
-Создать ML-сервис для определения авторства текстов на основании фрагмента из
+Создать ML сервис для определения авторства текстов на основании фрагмента из
 5-10 предложений.
 
 ## Состав команды
@@ -11,6 +14,36 @@
 - [Кирилл Рубашевский](https://github.com/kirill-rubashevskiy)
 - [Дмитрий Шильцов](https://github.com/DmitriyShiltsov)
 - [Елена Вольф](https://github.com/Graf-D) (куратор)
+
+## Структура репозитария
+
+```bash
+├── .dvc # DVC config
+├── LLM_bot # Telegram bot with DL model (development, run locally)
+├── app # FastAPI app with ML model
+├── assets # images and presentations
+├── bot # Telegram bot (production)
+├── compose.yaml # Docker Compose for building images
+├── conf # Hydra project configs
+├── data # DVC-tracked data
+├── mlds23_authorship_identification
+│   ├── classifiers.py # models zoo for ML experiments
+│   ├── extractors.py # feature extractors
+│   ├── parser.py # parses
+│   ├── preprocessing.py # preprocessing classes and functions
+│   └── utils.py
+├── models # DVC-tracked trained models
+├── notebooks
+├── poetry.lock # dependency management
+├── production.yaml # Docker Compose for running containers
+├── pyproject.toml # project and dependency management
+├── tests
+└── train.py # .py script for running ML experiments
+```
+
+## Структура сервиса
+
+![alt-text-1](assets/service_structure.svg)
 
 ## Работа с сервисом
 
@@ -169,8 +202,8 @@ FastAPI приложение будет доступно по адресу: http
 
 Для начала мы посчитали среднюю длину слова и предложения по каждому автору:
 
-![mean_word_length](visualizations/mean_word_length.png)
-![mean_sentence_length](visualizations/mean_sentence_length.png)
+![mean_word_length](assets/mean_word_length.png)
+![mean_sentence_length](assets/mean_sentence_length.png)
 
 На графиках видно, длина слов и предложений у авторов различаются, поэтому было
 принято решение сделать углубленный анализ следующих статистик с помощью пакета
@@ -201,7 +234,7 @@ FastAPI приложение будет доступно по адресу: http
 препинания, возможно это может дать полезные дополнительные признаки для
 обучения моделей.**
 
-![punct_distribution](visualizations/punct_distribution.png)
+![punct_distribution](assets/punct_distribution.png)
 
 На следующем этапе мы попробуем использовать эти статистики в качестве признаков
 для классификации.
@@ -213,7 +246,7 @@ FastAPI приложение будет доступно по адресу: http
 Для расширения стоплиста слов мы проанализировали самые часто встречающиеся
 слова:
 
-![top_20_words](visualizations/top_20_words.png)
+![top_20_words](assets/top_20_words.png)
 
 На графике видны погрешности в предобработке (аномально длинное тире с
 пробелами); 50 самых часто встречающихся слов сохранены в s3 для последующего
@@ -221,8 +254,8 @@ FastAPI приложение будет доступно по адресу: http
 
 Мы также проанализировали топ10 биграмм и триграмм:
 
-![top_10_bigrams](visualizations/top_10_bigrams.png)
-![top_10_trigrams](visualizations/top_10_trigrams.png)
+![top_10_bigrams](assets/top_10_bigrams.png)
+![top_10_trigrams](assets/top_10_trigrams.png)
 
 #### Анализ частей речи
 
@@ -249,7 +282,7 @@ FastAPI приложение будет доступно по адресу: http
 
 Распределения значений частей речи соответствуют одному из четырех типов:
 
-![pos_distribution_types](visualizations/pos_distribution_types.png)
+![pos_distribution_types](assets/pos_distribution_types.png)
 
 Мы проверили, что мультимодальное распределение отдельных частей речи
 наблюдается у всех авторов (гипотеза подтвердилась), и для дальнейшего анализа
@@ -257,7 +290,7 @@ FastAPI приложение будет доступно по адресу: http
 
 Мы анализировали медиану, которая меньше подвержена выбросам:
 
-![pos_medians_by_author](visualizations/pos_medians_by_author.png)
+![pos_medians_by_author](assets/pos_medians_by_author.png)
 
 Авторы различаются по медианной частоте использования частей речи:
 
@@ -271,7 +304,7 @@ FastAPI приложение будет доступно по адресу: http
 ограничили значения сверху 99-м персентилем и стандартизировали данные) и TSNE
 не позволило кластеризовать авторов:
 
-![pos_tsne_pca](visualizations/pos_tsne_pca.png)
+![pos_tsne_pca](assets/pos_tsne_pca.png)
 
 **Вывод: статистики по частям речи могут быть дополнительными признаками для
 обучения моделей, но эффект от них (без нелинейного преобразования) будет
@@ -284,7 +317,7 @@ FastAPI приложение будет доступно по адресу: http
 Мы также проанализировали распределение частей речи в зависимости от длины
 предлоожений:
 
-![pos_distribution_by_length](visualizations/pos_distribution_by_length.png)
+![pos_distribution_by_length](assets/pos_distribution_by_length.png)
 
 **Вывод: авторы по-разному строят предложения разной длины с точки зрения
 употребления частей речи, возможно это может дать полезные дополнительные
