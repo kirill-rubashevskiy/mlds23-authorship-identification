@@ -10,8 +10,9 @@ services:
         condition: service_healthy
     ports:
       - "8080:8080"
-    env_file:
-      - .env
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - BASE_WEBHOOK_URL=${BASE_WEBHOOK_URL}
     profiles:
       - full
   app:
