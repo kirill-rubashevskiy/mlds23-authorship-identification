@@ -1,4 +1,4 @@
-version: "3"
+version: "3.5"
 services:
   bot:
     image: kirillrubashevskiy/mlds23-authorship-identification:bot-latest
@@ -15,6 +15,8 @@ services:
       - BASE_WEBHOOK_URL=${BASE_WEBHOOK_URL}
     profiles:
       - full
+    networks:
+      - service-network
   app:
     image: kirillrubashevskiy/mlds23-authorship-identification:app-latest
     command: ["python3", "app/main.py"]
@@ -28,6 +30,8 @@ services:
     profiles:
       - full
       - app
+    networks:
+      - service-network
   db:
     image: postgres:latest
     volumes:
@@ -44,12 +48,16 @@ services:
     profiles:
       - full
       - app
+    networks:
+      - service-network
   cache:
     image: redis:latest
     command: ["redis-server", "--bind", "cache", "--port", "6379"]
     profiles:
       - full
       - app
+    networks:
+      - service-network
   ngrok:
     image: ngrok/ngrok:latest
     environment:
@@ -65,3 +73,8 @@ services:
       - "4040:4040"
     profiles:
       - full
+    networks:
+      - service-network
+networks:
+  service-network:
+    driver: bridge
