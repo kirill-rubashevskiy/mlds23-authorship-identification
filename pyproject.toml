@@ -91,6 +91,19 @@ flake8 = ".flake8"
 black = 1
 isort = 1
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+include = [
+    "app/*",
+    "bot/*",
+    "mlds23_authorship_identification/*"
+]
+omit = [
+    "**/__init__.py"
+]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
