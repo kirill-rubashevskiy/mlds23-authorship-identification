@@ -32,8 +32,8 @@ class Model:
     ML-model with loading from s3 and postprocessing.
     """
 
-    def __init__(self, model_name, **kwargs):
-        self.model = load_model(model_name, **kwargs)
+    def __init__(self, model_name):
+        self.model = load_model(model_name)
 
     def predict(
         self,
@@ -54,16 +54,16 @@ class Model:
         :return: predicted labels and/or author's names
         """
         if threshold:
-            labels = self.model.predict(X)
-        else:
             proba = self.model.predict_proba(X)
             labels = np.where(
                 np.max(proba, axis=1) > threshold, np.argmax(proba, axis=1), -1
             )
+        else:
+            labels = self.model.predict(X)
         if return_names:
             names = np.vectorize(label2name.get)(labels)
         if return_labels and return_names:
-            return np.hstack((labels, names), dtype=object)
+            return np.hstack((labels.reshape(-1, 1), names.reshape(-1, 1)), dtype=object)
         elif return_names:
             return names
         else:
