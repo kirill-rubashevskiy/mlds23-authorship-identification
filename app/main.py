@@ -30,20 +30,20 @@ async def lifespan(app: FastAPI, cfg: DictConfig):
     yield
 
 
+def create_app(cfg: DictConfig) -> FastAPI:
+    app = FastAPI(lifespan=partial(lifespan, cfg=cfg))
+    app.include_router(items.router)
+    app.include_router(users.router)
+    return app
+
+
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
 def main(cfg: DictConfig):
     db_url = f"postgresql://{cfg.db.user}:{cfg.db.password}@{cfg.db.host}:{cfg.db.port}/{cfg.db.name}"
     engine = create_engine(db_url)
     SessionLocal.configure(bind=engine)
     models.Base.metadata.create_all(bind=engine)
-
-    app = FastAPI(lifespan=partial(lifespan, cfg=cfg))
-    app.include_router(items.router)
-    app.include_router(users.router)
-
-    @app.get("/")
-    def root():
-        return {"message": "Welcome to the Authorship Identification Service"}
+    app = create_app(cfg)
 
     uvicorn.run(app, host="0.0.0.0", port=cfg.app.port)
 
