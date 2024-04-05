@@ -10,6 +10,11 @@ from app.dependencies import get_db, my_key_builder
 router = APIRouter(prefix="/users", tags=["users"])
 
 
+@router.get("/")
+def root():
+    return {"message": "Welcome to the Authorship Identification Service"}
+
+
 @router.post("/", response_model=schemas.User)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     """
