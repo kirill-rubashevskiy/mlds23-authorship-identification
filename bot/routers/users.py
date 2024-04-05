@@ -17,7 +17,7 @@ router = Router()
 async def cmd_start(message: Message, app_url: str):
     try:
         # check if FastAPI app is up
-        requests.get(app_url)
+        requests.get(f"{app_url}users/")
         user_id = message.from_user.id
         # if user is new — register them in db
         response = requests.post(f"{app_url}users/", json={"id": user_id})
