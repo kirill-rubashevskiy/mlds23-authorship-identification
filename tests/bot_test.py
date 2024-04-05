@@ -33,7 +33,7 @@ class TestUsers:
     @pytest.mark.asyncio
     @responses.activate
     async def test_cmd_start_success(self, status):
-        responses.get(url=mock_app_url, status=200)
+        responses.get(url=f"{mock_app_url}users/", status=200)
         responses.post(url=f"{mock_app_url}users/", status=status)
         requester = MockedBot(
             MessageHandler(
@@ -51,7 +51,7 @@ class TestUsers:
     @pytest.mark.asyncio
     @responses.activate
     async def test_cmd_start_app_down(self):
-        responses.get(url=mock_app_url, body=requests.ConnectionError())
+        responses.get(url=f"{mock_app_url}users/", body=requests.ConnectionError())
         requester = MockedBot(
             MessageHandler(
                 cmd_start, Command("start"), dp=Dispatcher(app_url=mock_app_url)
