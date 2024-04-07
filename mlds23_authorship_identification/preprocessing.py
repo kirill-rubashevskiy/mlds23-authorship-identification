@@ -125,27 +125,25 @@ def remove_numbers(text):
 
 
 def remove_http(text):
-    text = re.sub(r"https?:\/\/t.co\/[A-Za-zа-яА-Я0-9]*", " ", text)
+    text = re.sub(r"\s*https?:\/\/t.co\/[A-Za-zа-яА-Я0-9]*\s*", " ", text).strip()
     return text
 
 
 def remove_short_words(text):
-    text = re.sub(r"\b\w{1,2}\b", "", text)
+    # Удаляем слова из одной или двух букв и заменяем их на один пробел
+    text = re.sub(r"\b\w{1,2}\b", " ", text)
+    # Удаляем лишние пробелы, возникающие после удаления коротких слов
+    text = re.sub(r"\s{2,}", " ", text).strip()
     return text
 
 
 def remove_punctuation(text):
-    punctuations = """!()[]{};«№»:'",`<>./?@=#$-(%^)+&[*_]~"""
-    # no_punct = ""
-    no_punct = " "
-    for char in text:
-        if char not in punctuations:
-            no_punct = no_punct + char
-    return no_punct
-
-
-def remove_white_space(text):
-    text = text.strip()
+    punctuations = """!()[]{};«№»:'",`<>./?@=#$%^&*~"""
+    # Добавляем пробел вокруг символов пунктуации, чтобы избежать слипания слов после их удаления
+    for punct in punctuations:
+        text = text.replace(punct, " ")
+    # Удаляем лишние пробелы, возникающие после замены
+    text = re.sub(r"\s+", " ", text).strip()
     return text
 
 
@@ -158,7 +156,6 @@ def preprocess_text1(text, tokenize=True, tostr=True):
     text = remove_numbers(text)
     text = remove_http(text)
     text = convert_to_lower(text)
-    text = remove_white_space(text)
     text = remove_short_words(text)  # это убирает не/ни кстати
     text = remove_punctuation(
         text
@@ -186,7 +183,6 @@ def preprocess_text2(text, tokenize=True, tostr=True):
     text = remove_numbers(text)
     text = remove_http(text)
     text = convert_to_lower(text)
-    text = remove_white_space(text)
     text = remove_short_words(text)  # это убирает не/ни кстати
     # text = remove_punctuation(text) #cлепляет слова, там где знаки препинания без пробела
 
@@ -211,7 +207,6 @@ def preprocess_text3(text, tokenize=True, tostr=True):
     text = remove_numbers(text)
     text = remove_http(text)
     text = convert_to_lower(text)
-    text = remove_white_space(text)
     # text = remove_short_words(text) #это убирает не/ни кстати
     text = remove_punctuation(
         text
@@ -238,7 +233,6 @@ def preprocess_text4(text, tokenize=True, tostr=True):
     text = remove_numbers(text)
     text = remove_http(text)
     text = convert_to_lower(text)
-    text = remove_white_space(text)
     # text = remove_short_words(text) #это убирает не/ни кстати
     text = remove_punctuation(
         text
