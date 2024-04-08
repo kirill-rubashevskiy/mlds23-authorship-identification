@@ -43,3 +43,4 @@ run:
   train: "split_1000_train.csv"
   test: "split_1000_test.csv"
   tags: ["random search"]
+command: null
