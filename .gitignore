@@ -173,6 +173,12 @@ cython_debug/
 
 # DVC
 .dvcignore
+.dvc/config.local
+.dvc/tmp
+.dvc/cache
+data/
+models/
+!**/*.dvc
 
 # PostgreSQL
 db/
