@@ -20,13 +20,17 @@ from bot.routers.users import cmd_start, get_help, get_stats, rate, rated
 from bot.states import PredictText, PredictTexts
 
 
+# mock app url to send requests to
 mock_app_url = "http://app_url/"
 
 
 class TestUsers:
+    """Tests for users-related events."""
 
     @pytest.fixture
     def mock_stats(self):
+        """ "Mocks the service stats."""
+
         return {"total_users": 3, "total_requests": 19, "avg_rating": 5.0}
 
     @pytest.mark.parametrize("status", [200, 400])
@@ -34,6 +38,7 @@ class TestUsers:
     @responses.activate
     async def test_cmd_start_success(self, status):
         responses.get(url=f"{mock_app_url}users/", status=200)
+        # check if user is new and if yes, register them in db
         responses.post(url=f"{mock_app_url}users/", status=status)
         requester = MockedBot(
             MessageHandler(
@@ -51,6 +56,8 @@ class TestUsers:
     @pytest.mark.asyncio
     @responses.activate
     async def test_cmd_start_app_down(self):
+        """Tests feedback when the app is down."""
+
         responses.get(url=f"{mock_app_url}users/", body=requests.ConnectionError())
         requester = MockedBot(
             MessageHandler(
@@ -103,6 +110,8 @@ class TestUsers:
 
     @pytest.mark.asyncio
     async def test_rate(self):
+        """Tests asking user to rate the service."""
+
         request_handler = CallbackQueryHandler(
             rate,
             F.data == "rate",
@@ -120,6 +129,9 @@ class TestUsers:
     @pytest.mark.asyncio
     @responses.activate
     async def test_rated(self):
+        """Tests logging user-given rating"""
+
+        # update user rating in db
         responses.patch(
             url=f"{mock_app_url}users/{USER.get('id')}/5",
             status=200,
@@ -139,6 +151,7 @@ class TestUsers:
 
 
 class TestItems:
+    """Tests for predictions-related events."""
 
     mock_download = create_autospec(
         Bot.download, return_value=StringIO("text\ntext 1\ntext 2")
@@ -150,6 +163,8 @@ class TestItems:
 
     @pytest.mark.asyncio
     async def test_enter_text(self):
+        """Tests asking user to enter text to predict author."""
+
         request_handler = CallbackQueryHandler(
             enter_text,
             F.data == "predict_text",
@@ -173,6 +188,7 @@ class TestItems:
     @pytest.mark.asyncio
     @responses.activate
     async def test_predict_text(self, label, name, expected):
+        # update user`s number of requests
         responses.patch(
             url=f"{mock_app_url}users/{USER.get('id')}/requests",
             status=200,
@@ -196,6 +212,7 @@ class TestItems:
 
     @pytest.mark.asyncio
     async def test_upload_file(self):
+        """Tests asking user to upload a file to predict authors."""
         request_handler = CallbackQueryHandler(
             upload_file,
             F.data == "predict_texts",
@@ -213,6 +230,9 @@ class TestItems:
     @pytest.mark.asyncio
     @responses.activate
     async def test_predict_texts(self, mock_predictions):
+        """Tests making and returning predictions."""
+
+        # update user`s number of requests
         responses.patch(
             url=f"{mock_app_url}users/{USER.get('id')}/requests",
             status=200,

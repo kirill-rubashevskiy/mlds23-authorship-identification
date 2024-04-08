@@ -31,6 +31,17 @@ async def lifespan(app: FastAPI, cfg: DictConfig):
 
 
 def create_app(cfg: DictConfig) -> FastAPI:
+    """
+    Creates a FastAPI app instance.
+
+    Loads model from S3.
+    Initializes Redis cache.
+    Adds routes to FastAPI app.
+
+    Args:
+        cfg: DictConfig instance, hydra config.
+    """
+
     app = FastAPI(lifespan=partial(lifespan, cfg=cfg))
     app.include_router(items.router)
     app.include_router(users.router)
@@ -39,10 +50,13 @@ def create_app(cfg: DictConfig) -> FastAPI:
 
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
 def main(cfg: DictConfig):
+
+    # initialize PostgreSQL db
     db_url = f"postgresql://{cfg.db.user}:{cfg.db.password}@{cfg.db.host}:{cfg.db.port}/{cfg.db.name}"
     engine = create_engine(db_url)
     SessionLocal.configure(bind=engine)
     models.Base.metadata.create_all(bind=engine)
+
     app = create_app(cfg)
 
     uvicorn.run(app, host="0.0.0.0", port=cfg.app.port)

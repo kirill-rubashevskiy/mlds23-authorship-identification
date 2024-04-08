@@ -176,8 +176,8 @@ coverage report
 Name                                                Stmts   Miss  Cover
 -----------------------------------------------------------------------
 app/crud.py                                            35      1    97%
-app/database.py                                         4      0   100%
-app/dependencies.py                                    36      4    89%
+app/database.py                                         3      0   100%
+app/dependencies.py                                    29      4    86%
 app/main.py                                            39      8    79%
 app/models.py                                           7      0   100%
 app/routers/items.py                                   25      0   100%
@@ -188,36 +188,39 @@ bot/routers/items.py                                   47      0   100%
 bot/routers/users.py                                   46      0   100%
 bot/states.py                                           7      0   100%
 bot/utils.py                                           16      0   100%
-mlds23_authorship_identification/extractors.py         89     21    76%
-mlds23_authorship_identification/preprocessing.py     191    143    25%
-mlds23_authorship_identification/utils.py              12      7    42%
+mlds23_authorship_identification/extractors.py         89      4    96%
+mlds23_authorship_identification/preprocessing.py     184     73    60%
+mlds23_authorship_identification/utils.py               8      0   100%
 -----------------------------------------------------------------------
-TOTAL                                                 624    184    71%
+TOTAL                                                 605     90    85%
 ```
 
 <details>
 
 <summary>для тестирования</summary>
 
-1. Установите [Poetry](https://python-poetry.org/docs/#installation)
-2. Клонируйте репозитарий:
+1. Установите [Poetry](https://python-poetry.org/docs/#installation),
+   [Redis](https://redis.io/docs/install/install-redis/) и
+   [PostgreSQL](https://www.postgresql.org/download/)
+2. Создайте тестовую базу данных:
+
+```postgresql
+CREATE DATABASE ai_test_db;
+CREATE USER ai_user WITH PASSWORD 'ai_password';
+GRANT ALL PRIVILEGES ON DATABASE ai_test_db TO ai_user;
+```
+
+3. Клонируйте репозитарий:
 
 ```bash
 git clone https://github.com/kirill-rubashevskiy/mlds23-authorship-identification.git
 ```
 
-3. Создайте виртуальное окружение
-4. Установите зависимости проекта:
+4. Создайте виртуальное окружение
+5. Установите зависимости проекта:
 
 ```bash
 poetry install
-```
-
-5. Установите форк библиотеки `aiogram_tests` (оптимизирован для работы с
-   `aiogram` 3.0)
-
-```bash
-pip install git+https://github.com/Like6po/aiogram_tests.git
 ```
 
 6. Запустите тесты:
