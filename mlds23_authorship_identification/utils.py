@@ -1,44 +1,23 @@
-import pickle
-from io import BytesIO
+from typing import Any
 
-import boto3
+from dvc.api import open
+from joblib import load
 
 
-def load_model(
-    service_name: str,
-    endpoint_url: str,
-    aws_access_key_id: str,
-    aws_secret_access_key: str,
-    region_name: str,
-    bucket: str,
-    models_dir: str,
-    model_name: str,
-):
+def load_model(model_name: str) -> Any:
     """
-    Load model from s3 storage.
+    Function loads DVC-tracked ML-model from remote S3.
 
-    :param service_name:
-    :param endpoint_url:
-    :param aws_access_key_id:
-    :param aws_secret_access_key:
-    :param region_name:
-    :param bucket:
-    :param models_dir:
-    :param model_name:
-    :return:
+    :param model_name: model name
+    :return: model
     """
-    session = boto3.session.Session()
-    s3 = session.client(
-        service_name=service_name,
-        endpoint_url=endpoint_url,
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
-        region_name=region_name,
-    )
-    with BytesIO() as data:
-        s3.download_fileobj(Bucket=bucket, Key=f"{models_dir}{model_name}", Fileobj=data)
-        data.seek(0)
-        model = pickle.load(data)
+    with open(
+        path=f"models/{model_name}",
+        repo="https://github.com/kirill-rubashevskiy/mlds23-authorship-identification/",
+        mode="rb",
+        remote="yandexcloudhttp",
+    ) as f:
+        model = load(f)
     return model
 
 
