@@ -1,7 +1,9 @@
 import re
 from string import punctuation
 
+import compress_fasttext
 import nltk
+import numpy as np
 import pandas as pd
 import simplemma
 from nltk.tokenize import RegexpTokenizer, word_tokenize
@@ -52,6 +54,21 @@ class TextTransformer(BaseEstimator, TransformerMixin):
         else:
             X = pd.Series(X, name="text").apply(self._preprocess)
         return X
+
+
+class FastTextTransformer(BaseEstimator, TransformerMixin):
+    """Convert texts into their mean fastText vectors"""
+
+    def __init__(self):
+        self.model = compress_fasttext.models.CompressedFastTextKeyedVectors.load(
+            "https://github.com/avidale/compress-fasttext/releases/download/gensim-4-draft/geowac_tokens_sg_300_5_2020-100K-20K-100.bin"
+        )
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        return np.stack([np.mean([self.model[w] for w in text.split()], 0) for text in X])
 
 
 my_stopwords = []  # заглушка если придумаем стопслова
