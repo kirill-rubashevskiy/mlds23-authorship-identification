@@ -23,6 +23,7 @@ dvc = "^3.45.0"
 dvc-s3 = "^3.0.1"
 simplemma = "^0.9.1"
 fire = "^0.6.0"
+compress-fasttext = "^0.1.4"
 
 
 [tool.poetry.group.ml.dependencies]
