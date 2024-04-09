@@ -170,6 +170,38 @@ FastAPI приложение будет доступно по адресу: http
 
 </details>
 
+## Воспроизведение экспериментов
+
+<details>
+
+<summary>для воспроизведения экспериментов</summary>
+
+1. Установите [Poetry](https://python-poetry.org/docs/#installation)
+2. Клонируйте репозитарий:
+
+```bash
+git clone https://github.com/kirill-rubashevskiy/mlds23-authorship-identification.git
+```
+
+3. Создайте виртуальное окружение
+4. Установите зависимости проекта:
+
+```bash
+poetry install
+```
+
+5. Проводите эксперименты при помощи `commands.py` (для логирования
+   экспериментов в Weights & Biases укажите свои W&B credentials в
+   `conf/config.yaml`):
+
+```bash
+python3 commands.py train 'TF-IDF stats poly LR'  logisticregression__С=2 # обучение модели
+python3 commands.py infer models/bow_stats_poly_lr.joblib.dvc # тестирование модели
+python3 commands.py randomsearch 'TF-IDF stats poly LR' # подбор гиперпараметров при помощи Random Search
+```
+
+</details>
+
 ## Тесты
 
 ```bash
