@@ -12,7 +12,7 @@ from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.svm import SVC
 
 from .extractors import TextStatsExtractor
-from .preprocessing import TextTransformer
+from .preprocessing import FastTextTransformer, TextTransformer
 
 
 @dataclass
@@ -318,6 +318,18 @@ clfs = {
             "randomforestclassifier__max_depth": [5, 10, 20, None],
             "randomforestclassifier__min_samples_leaf": [1, 2, 4, 8],
             "randomforestclassifier__max_features": ["sqrt", "log2"],
+        },
+    ),
+    "fastText LR": Classifier(
+        pipeline=make_pipeline(
+            TextTransformer(),
+            FastTextTransformer(),
+            LogisticRegression(solver="saga", max_iter=1000),
+        ),
+        params={
+            **texttransformer_params,
+            "logisticregression__C": np.logspace(-3, 3, 20),
+            "logisticregression__class_weight": [None, "balanced"],
         },
     ),
 }

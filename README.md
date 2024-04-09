@@ -19,13 +19,15 @@ _Проект студентов первого года магистратур�
 
 ```bash
 ├── .dvc # DVC config
-├── LLM_bot # Telegram bot with DL model (development, run locally)
 ├── app # FastAPI app with ML model
 ├── assets # images and presentations
 ├── bot # Telegram bot (production)
+├── commands.py # .py script for running ML experiments
 ├── compose.yaml # Docker Compose for building images
 ├── conf # Hydra project configs
 ├── data # DVC-tracked data
+├── GRAM_bot # Alternative Telegram bot
+├── LLM_bot # Telegram bot with DL model (development, run locally)
 ├── mlds23_authorship_identification
 │   ├── classifiers.py # models zoo for ML experiments
 │   ├── extractors.py # feature extractors
@@ -37,8 +39,7 @@ _Проект студентов первого года магистратур�
 ├── poetry.lock # dependency management
 ├── production.yaml # Docker Compose for running containers
 ├── pyproject.toml # project and dependency management
-├── tests
-└── train.py # .py script for running ML experiments
+└── tests
 ```
 
 ## Структура сервиса
@@ -189,10 +190,10 @@ bot/routers/users.py                                   46      0   100%
 bot/states.py                                           7      0   100%
 bot/utils.py                                           16      0   100%
 mlds23_authorship_identification/extractors.py         89      4    96%
-mlds23_authorship_identification/preprocessing.py     184     73    60%
-mlds23_authorship_identification/utils.py               8      0   100%
+mlds23_authorship_identification/preprocessing.py     193     76    61%
+mlds23_authorship_identification/utils.py              37     22    41%
 -----------------------------------------------------------------------
-TOTAL                                                 605     90    85%
+TOTAL                                                 643    115    82%
 ```
 
 <details>
